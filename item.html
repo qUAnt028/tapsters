@@ -22,42 +22,33 @@
             <div class="price" id="item-price"></div>
             <span class="muted" id="item-currency"></span>
           </div>
-          <div class="row gap-12 mt-12">
-            <span class="stars" id="item-avg-stars" data-readonly="true"></span>
-            <span class="muted" id="item-avg-text"></span>
-          </div>
           <div class="desc" id="item-desc"></div>
-          <div class="muted">Sold by <strong id="item-seller">…</strong></div>
 
-          <div class="row mt-24" style="gap:10px">
+          <div class="seller-card" id="seller-card">
+            <div class="seller-avatar" id="seller-avatar">T</div>
+            <div style="flex:1; min-width:0">
+              <div class="muted" style="font-size:.85rem">Sold by</div>
+              <a id="seller-link" href="#" style="font-weight:700; color:var(--purple-800)">…</a>
+              <div class="row gap-12" style="margin-top:2px">
+                <span class="stars" id="seller-stars" data-readonly="true"></span>
+                <span class="muted" id="seller-rating-text"></span>
+              </div>
+            </div>
+            <a class="btn secondary" id="seller-profile-btn" href="#">View profile</a>
+          </div>
+
+          <div class="row mt-24" style="gap:10px; flex-wrap:wrap">
             <button class="btn" id="add-cart-btn">Add to cart</button>
             <button class="btn secondary" id="buy-now-btn">Buy now</button>
+            <button class="btn danger hidden" id="delete-btn">Delete listing</button>
           </div>
           <div id="add-error" class="error hidden mt-12"></div>
         </div>
       </div>
 
-      <section class="section">
-        <h2>Reviews & comments</h2>
-
-        <div id="comment-gate" class="notice hidden">
-          <a href="auth.html?next=item.html">Log in</a> to leave a rating or comment.
-        </div>
-
-        <form id="comment-form" class="form-card hidden" style="margin: 0 0 18px;">
-          <div class="form-row">
-            <label>Your rating</label>
-            <span class="stars" id="rating-input"></span>
-          </div>
-          <div class="form-row">
-            <label for="comment-content">Your comment</label>
-            <textarea id="comment-content" rows="3" placeholder="Share your thoughts…"></textarea>
-          </div>
-          <button class="btn" type="submit">Post review</button>
-        </form>
-
-        <div id="comments-list"></div>
-      </section>
+      <p class="muted mt-24" style="text-align:center">
+        Reviews and ratings live on the <strong>seller's profile</strong>. Open the seller above to leave a review.
+      </p>
     </article>
   </main>
 

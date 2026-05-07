@@ -37,17 +37,23 @@ create index if not exists items_category_idx on public.items(category_id);
 create index if not exists items_seller_idx   on public.items(seller_id);
 create index if not exists items_title_trgm   on public.items using gin (to_tsvector('simple', title));
 
--- ----- comments + ratings -----
-create table if not exists public.comments (
-  id         uuid primary key default gen_random_uuid(),
-  item_id    uuid not null references public.items(id) on delete cascade,
-  user_id    uuid not null references auth.users(id) on delete cascade,
-  content    text not null,
-  rating     int check (rating between 1 and 5),
-  created_at timestamptz not null default now()
+-- ----- reviews about sellers (5-star ratings + comments) -----
+-- Note: an earlier version of this schema had a `comments` table tied to
+-- items. Reviews now belong to *accounts* (sellers), not individual items.
+drop table if exists public.comments cascade;
+
+create table if not exists public.reviews (
+  id          uuid primary key default gen_random_uuid(),
+  subject_id  uuid not null references auth.users(id) on delete cascade, -- the seller being reviewed
+  user_id     uuid not null references auth.users(id) on delete cascade, -- the reviewer
+  content     text not null,
+  rating      int check (rating between 1 and 5),
+  created_at  timestamptz not null default now(),
+  unique (subject_id, user_id)
 );
 
-create index if not exists comments_item_idx on public.comments(item_id);
+create index if not exists reviews_subject_idx on public.reviews(subject_id);
+create index if not exists reviews_user_idx    on public.reviews(user_id);
 
 -- ----- orders -----
 create table if not exists public.orders (
@@ -89,7 +95,7 @@ create table if not exists public.cart_items (
 alter table public.profiles    enable row level security;
 alter table public.categories  enable row level security;
 alter table public.items       enable row level security;
-alter table public.comments    enable row level security;
+alter table public.reviews     enable row level security;
 alter table public.orders      enable row level security;
 alter table public.order_items enable row level security;
 alter table public.cart_items  enable row level security;
@@ -116,15 +122,17 @@ create policy "items insert seller" on public.items for insert with check (auth.
 create policy "items update seller" on public.items for update using (auth.uid() = seller_id);
 create policy "items delete seller" on public.items for delete using (auth.uid() = seller_id);
 
--- comments
-drop policy if exists "comments read all"      on public.comments;
-drop policy if exists "comments insert auth"   on public.comments;
-drop policy if exists "comments update author" on public.comments;
-drop policy if exists "comments delete author" on public.comments;
-create policy "comments read all"      on public.comments for select using (true);
-create policy "comments insert auth"   on public.comments for insert with check (auth.uid() = user_id);
-create policy "comments update author" on public.comments for update using (auth.uid() = user_id);
-create policy "comments delete author" on public.comments for delete using (auth.uid() = user_id);
+-- reviews (about a seller account; not items)
+drop policy if exists "reviews read all"      on public.reviews;
+drop policy if exists "reviews insert auth"   on public.reviews;
+drop policy if exists "reviews update author" on public.reviews;
+drop policy if exists "reviews delete author" on public.reviews;
+create policy "reviews read all"      on public.reviews for select using (true);
+-- a logged-in user can only review somebody else, never themselves
+create policy "reviews insert auth"   on public.reviews for insert
+  with check (auth.uid() = user_id and auth.uid() <> subject_id);
+create policy "reviews update author" on public.reviews for update using (auth.uid() = user_id);
+create policy "reviews delete author" on public.reviews for delete using (auth.uid() = user_id);
 
 -- orders
 drop policy if exists "orders read self"   on public.orders;

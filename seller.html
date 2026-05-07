@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seller — Tapsters</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="container">
+    <div id="not-found" class="empty hidden mt-24">Seller not found.</div>
+
+    <article id="seller-root" class="hidden">
+      <div class="seller-hero">
+        <div class="seller-avatar" id="hero-avatar">T</div>
+        <div style="flex:1; min-width:0">
+          <h1 id="seller-name">…</h1>
+          <div class="muted" id="seller-username"></div>
+          <div class="row gap-12" style="margin-top:6px">
+            <span class="stars" id="seller-stars" data-readonly="true"></span>
+            <span class="muted" id="seller-rating-text"></span>
+          </div>
+          <div class="muted" id="seller-joined" style="font-size:.85rem; margin-top:4px"></div>
+        </div>
+      </div>
+
+      <section class="section">
+        <h2>Listings by this seller</h2>
+        <div id="seller-listings" class="grid"></div>
+        <div id="seller-listings-empty" class="empty hidden">This seller has no active listings.</div>
+      </section>
+
+      <section class="section">
+        <h2>Reviews about this seller</h2>
+
+        <div id="review-self-notice" class="notice hidden">You can't review your own account.</div>
+        <div id="review-gate" class="notice hidden">
+          <a href="auth.html?next=seller.html">Log in</a> to leave a review for this seller.
+        </div>
+
+        <form id="review-form" class="form-card hidden" style="margin: 0 0 18px;">
+          <div class="form-row">
+            <label>Your rating</label>
+            <span class="stars" id="rating-input"></span>
+          </div>
+          <div class="form-row">
+            <label for="review-content">Your review</label>
+            <textarea id="review-content" rows="3" placeholder="Share your experience with this seller…"></textarea>
+          </div>
+          <div id="review-error" class="error hidden"></div>
+          <button class="btn" type="submit" id="review-submit">Post review</button>
+        </form>
+
+        <div id="reviews-list"></div>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer"><div class="container">© Tapsters</div></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/currency.js"></script>
+  <script src="js/recently.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/seller.js"></script>
+</body>
+</html>

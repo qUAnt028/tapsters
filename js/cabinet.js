@@ -101,17 +101,40 @@
       return;
     }
     root.innerHTML = '<div class="grid">' + data.map((it) => `
-      <a class="card" href="item.html?id=${encodeURIComponent(it.id)}">
-        <div class="thumb">${it.image_url ? `<img src="${escapeHtml(it.image_url)}" alt="">` : '<div style="font-size:42px">📦</div>'}</div>
-        <div class="body">
-          <div class="title">${escapeHtml(it.title)}</div>
-          <div class="meta">
-            <div class="price">${escapeHtml(window.tapCurrency.formatItem(it.price, it.currency))}</div>
-            <div class="muted">${it.sold ? "sold" : "active"}</div>
+      <div class="card" data-id="${escapeHtml(it.id)}">
+        <a href="item.html?id=${encodeURIComponent(it.id)}">
+          <div class="thumb">${it.image_url ? `<img src="${escapeHtml(it.image_url)}" alt="">` : '<div style="font-size:42px">📦</div>'}</div>
+          <div class="body">
+            <div class="title">${escapeHtml(it.title)}</div>
+            <div class="meta">
+              <div class="price">${escapeHtml(window.tapCurrency.formatItem(it.price, it.currency))}</div>
+              <div class="muted">${it.sold ? "sold" : "active"}</div>
+            </div>
           </div>
+        </a>
+        <div class="row" style="padding:0 12px 12px; gap:8px">
+          <button class="btn danger small js-delete-listing" data-id="${escapeHtml(it.id)}">Delete</button>
         </div>
-      </a>
+      </div>
     `).join("") + '</div>';
+
+    root.querySelectorAll(".js-delete-listing").forEach((btn) => {
+      btn.addEventListener("click", async (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const id = btn.getAttribute("data-id");
+        if (!confirm("Delete this listing? This can't be undone.")) return;
+        btn.disabled = true;
+        try {
+          const { error: delErr } = await t.client.from("items").delete().eq("id", id);
+          if (delErr) throw delErr;
+          await loadMyListings(userId);
+        } catch (e) {
+          alert(e.message || "Could not delete listing.");
+          btn.disabled = false;
+        }
+      });
+    });
   }
 
   async function loadAccount(user) {

@@ -64,8 +64,25 @@ Netlify, Vercel, or any other static host.
 | Sign in / sign up    | `auth.html`           |
 | Create a listing     | `create-listing.html` |
 | Item detail (lot)    | `item.html?id=…`      |
+| Seller profile       | `seller.html?id=…`    |
 | Checkout             | `checkout.html`       |
 | Personal cabinet     | `cabinet.html`        |
+
+## Reviews & deletion
+
+- **Reviews live on seller accounts**, not items. From any item page click the
+  seller card → *View profile* to leave a 5-star + comment review for that
+  seller. Each user may only post a single review per seller (which they can
+  edit later).
+- **Sellers can delete their own listings** from the item detail page or from
+  *Cabinet → My listings*. Row-Level-Security forbids anyone else.
+- **After a successful checkout** the purchased lots are removed from the
+  marketplace automatically (marked `sold = true` and deleted by the buyer's
+  client where allowed; sold items are filtered from listings everywhere).
+
+If you previously ran an older version of the schema that had a `comments`
+table, re-running `supabase/schema.sql` will drop it and create the new
+`reviews` table in its place.
 
 JavaScript modules live under `js/` and are intentionally framework-free so
 they're easy to read and tweak.

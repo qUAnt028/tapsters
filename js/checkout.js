@@ -194,6 +194,17 @@
         const { error: liErr } = await t.client.from("order_items").insert(lines);
         if (liErr) throw liErr;
 
+        // Remove the purchased items from the marketplace so other shoppers
+        // can't buy them again. RLS only allows deleting one's own items, so
+        // we mark them as sold first; sold items are filtered everywhere.
+        const itemIds = cartItems.map((it) => it.id);
+        try {
+          await t.client.from("items").update({ sold: true }).in("id", itemIds);
+        } catch (_) { /* non-fatal */ }
+        try {
+          await t.client.from("items").delete().in("id", itemIds);
+        } catch (_) { /* non-fatal — the items are still hidden by sold=true */ }
+
         await window.tapCart.clear();
 
         $("#checkout-grid").classList.add("hidden");
