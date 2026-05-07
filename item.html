@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Item — Tapsters</title>
+  <title>Tapsters</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <div id="site-header"></div>
 
   <main class="container">
-    <div id="not-found" class="empty hidden mt-24">Item not found.</div>
+    <div id="not-found" class="empty hidden mt-24">Товар не знайдено.</div>
 
     <article id="item-root" class="hidden">
       <div class="item-detail">
@@ -27,20 +27,20 @@
           <div class="seller-card" id="seller-card">
             <div class="seller-avatar" id="seller-avatar">T</div>
             <div style="flex:1; min-width:0">
-              <div class="muted" style="font-size:.85rem">Sold by</div>
+              <div class="muted" style="font-size:.85rem">Виставлено</div>
               <a id="seller-link" href="#" style="font-weight:700; color:var(--purple-800)">…</a>
               <div class="row gap-12" style="margin-top:2px">
                 <span class="stars" id="seller-stars" data-readonly="true"></span>
                 <span class="muted" id="seller-rating-text"></span>
               </div>
             </div>
-            <a class="btn secondary" id="seller-profile-btn" href="#">View profile</a>
+            <a class="btn secondary" id="seller-profile-btn" href="#">Переглянути профіль</a>
           </div>
 
           <div class="row mt-24" style="gap:10px; flex-wrap:wrap">
-            <button class="btn" id="add-cart-btn">Add to cart</button>
-            <button class="btn secondary" id="buy-now-btn">Buy now</button>
-            <button class="btn danger hidden" id="delete-btn">Delete listing</button>
+            <button class="btn" id="add-cart-btn">Додати у кошик</button>
+            <button class="btn secondary" id="buy-now-btn">Замовити зараз</button>
+            <button class="btn danger hidden" id="delete-btn">Видалити</button>
           </div>
           <div id="add-error" class="error hidden mt-12"></div>
         </div>
