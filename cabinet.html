@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My cabinet — Tapsters</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="container">
+    <div id="auth-gate" class="form-card hidden">
+      <h1>Please log in</h1>
+      <p>Your personal cabinet is only available to registered users.</p>
+      <a class="btn" href="auth.html?next=cabinet.html">Log in</a>
+      <a class="btn secondary" href="auth.html?next=cabinet.html#register">Sign up</a>
+    </div>
+
+    <section id="cabinet-root" class="hidden">
+      <h1 style="margin: 24px 0 8px; color: var(--purple-800)">My cabinet</h1>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="orders">Orders</button>
+        <button class="tab" data-tab="listings">My listings</button>
+        <button class="tab" data-tab="account">Account info</button>
+      </div>
+
+      <div id="tab-orders" class="tab-pane">
+        <div id="orders-list"></div>
+      </div>
+
+      <div id="tab-listings" class="tab-pane hidden">
+        <div id="listings-list"></div>
+      </div>
+
+      <div id="tab-account" class="tab-pane hidden">
+        <div class="form-card" style="margin: 0; max-width: 560px;">
+          <h2 style="margin-top:0; color: var(--purple-800)">Account info</h2>
+          <div id="account-error" class="error hidden"></div>
+          <div id="account-success" class="success hidden"></div>
+          <form id="account-form">
+            <div class="form-row">
+              <label>Email</label>
+              <input type="email" id="account-email" disabled />
+            </div>
+            <div class="form-grid-2">
+              <div class="form-row">
+                <label for="account-username">Username</label>
+                <input type="text" id="account-username" />
+              </div>
+              <div class="form-row">
+                <label for="account-name">Full name</label>
+                <input type="text" id="account-name" />
+              </div>
+            </div>
+            <div class="row" style="gap:8px">
+              <button class="btn" type="submit">Save changes</button>
+              <button class="btn secondary" type="button" id="logout-btn">Log out</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container">© Tapsters</div></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/currency.js"></script>
+  <script src="js/recently.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/cabinet.js"></script>
+</body>
+</html>

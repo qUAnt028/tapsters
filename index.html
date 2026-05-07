@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tapsters — buy and sell anything</title>
+  <meta name="description" content="Tapsters is a friendly purple marketplace where you can buy and sell." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <h1>Find something purple-good.</h1>
+        <p>Buy and sell anything on Tapsters — a community marketplace.</p>
+      </div>
+      <button class="cta" id="hero-cta">Start selling</button>
+    </section>
+
+    <section class="section">
+      <div class="between">
+        <h2 id="page-title">Featured listings</h2>
+        <div class="row">
+          <span class="muted">Currency:</span>
+          <select id="currency-select" aria-label="Display currency">
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="UAH">UAH (₴)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="chips" id="cat-chips" style="margin: 8px 0 16px"></div>
+
+      <div id="listing-grid" class="grid"></div>
+      <div id="listing-empty" class="empty hidden">No listings match your search yet.</div>
+    </section>
+
+    <section class="section" id="recent-section">
+      <h2>Recently viewed</h2>
+      <div id="recent-grid" class="grid"></div>
+      <div id="recent-empty" class="empty">Items you view will appear here.</div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">© Tapsters — a friendly marketplace.</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/currency.js"></script>
+  <script src="js/recently.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

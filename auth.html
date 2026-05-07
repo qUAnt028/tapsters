@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in or sign up — Tapsters</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="container">
+    <div class="form-card">
+      <div class="auth-tabs tabs">
+        <button class="tab active" data-mode="login">Log in</button>
+        <button class="tab" data-mode="register">Sign up</button>
+      </div>
+
+      <div id="form-error" class="error hidden"></div>
+      <div id="form-success" class="success hidden"></div>
+
+      <form id="auth-form" autocomplete="on">
+        <h1 id="form-title">Log in to Tapsters</h1>
+        <p class="muted" id="form-sub">Welcome back. Enter your credentials.</p>
+
+        <div class="form-row register-only hidden">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="purplelover42" autocomplete="username" />
+        </div>
+
+        <div class="form-row register-only hidden">
+          <label for="full_name">Full name</label>
+          <input type="text" id="full_name" name="full_name" placeholder="Jane Doe" autocomplete="name" />
+        </div>
+
+        <div class="form-row">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autocomplete="email" />
+        </div>
+
+        <div class="form-row">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password" minlength="6" />
+        </div>
+
+        <button class="btn full" type="submit" id="submit-btn">Log in</button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">© Tapsters</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/currency.js"></script>
+  <script src="js/recently.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

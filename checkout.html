@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout — Tapsters</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="container">
+    <div id="auth-gate" class="form-card hidden">
+      <h1>Please log in</h1>
+      <p>Checkout is only available to registered users.</p>
+      <a class="btn" href="auth.html?next=checkout.html">Log in</a>
+      <a class="btn secondary" href="auth.html?next=checkout.html#register">Sign up</a>
+    </div>
+
+    <div id="empty-cart" class="form-card hidden">
+      <h1>Your cart is empty</h1>
+      <p>Browse the marketplace to add some items.</p>
+      <a class="btn" href="index.html">Continue shopping</a>
+    </div>
+
+    <div id="success-card" class="form-card hidden">
+      <h1>🎉 Order placed!</h1>
+      <p id="success-msg">Your order has been recorded.</p>
+      <a class="btn" href="cabinet.html#orders">View my orders</a>
+      <a class="btn secondary" href="index.html">Keep shopping</a>
+    </div>
+
+    <div id="checkout-grid" class="hidden" style="display:grid; grid-template-columns: 1.2fr 1fr; gap:24px; margin-top:24px;">
+      <form id="checkout-form" class="form-card" style="margin:0">
+        <h1>Checkout</h1>
+
+        <div id="form-error" class="error hidden"></div>
+
+        <h3 style="margin-top: 8px; color: var(--purple-800)">Delivery method</h3>
+        <div class="option-cards" id="delivery-cards">
+          <label class="option-card" data-method="nova_poshta">
+            <input type="radio" name="delivery" value="nova_poshta" hidden checked>
+            <div>Nova Poshta</div>
+            <small>Branch / courier in Ukraine</small>
+          </label>
+          <label class="option-card" data-method="ukrposhta">
+            <input type="radio" name="delivery" value="ukrposhta" hidden>
+            <div>Ukrposhta</div>
+            <small>National post service</small>
+          </label>
+          <label class="option-card" data-method="meest">
+            <input type="radio" name="delivery" value="meest" hidden>
+            <div>Meest</div>
+            <small>International courier</small>
+          </label>
+        </div>
+
+        <div class="form-grid-2 mt-12">
+          <div class="form-row">
+            <label for="branch">Branch / office</label>
+            <input type="text" id="branch" placeholder="e.g. Branch #12 / Pickup point" />
+          </div>
+          <div class="form-row">
+            <label for="address">Delivery address</label>
+            <input type="text" id="address" placeholder="Street, building, apt., city, ZIP" />
+          </div>
+        </div>
+
+        <h3 style="margin-top: 16px; color: var(--purple-800)">Payment method</h3>
+        <div class="option-cards two" id="payment-cards">
+          <label class="option-card active" data-method="cod">
+            <input type="radio" name="payment" value="cod" hidden checked>
+            <div>Cash on delivery</div>
+            <small>Pay when the parcel arrives</small>
+          </label>
+          <label class="option-card" data-method="prepay">
+            <input type="radio" name="payment" value="prepay" hidden>
+            <div>Prepayment</div>
+            <small>Pay now with a bank card</small>
+          </label>
+        </div>
+
+        <div id="card-fields" class="hidden">
+          <div class="form-row">
+            <label for="card-number">Card number</label>
+            <input type="text" id="card-number" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" autocomplete="cc-number" />
+          </div>
+          <div class="form-grid-2">
+            <div class="form-row">
+              <label for="card-name">Cardholder name</label>
+              <input type="text" id="card-name" placeholder="JANE DOE" autocomplete="cc-name" />
+            </div>
+            <div class="form-grid-2">
+              <div class="form-row">
+                <label for="card-expiry">Expiry</label>
+                <input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" />
+              </div>
+              <div class="form-row">
+                <label for="card-cvv">CVV</label>
+                <input type="text" id="card-cvv" inputmode="numeric" maxlength="4" placeholder="123" autocomplete="cc-csc" />
+              </div>
+            </div>
+          </div>
+          <p class="muted" style="font-size:.85rem">Demo only — no card data is stored or charged. We keep just the last 4 digits with your order.</p>
+        </div>
+
+        <button class="btn full mt-12" type="submit" id="submit-btn">Place order</button>
+      </form>
+
+      <aside class="form-card" style="margin:0; max-width: none">
+        <h2 style="margin-top:0; color: var(--purple-800)">Order summary</h2>
+        <div id="cart-summary"></div>
+        <div class="cart-totals" style="margin-top:8px"><div>Total</div><div id="grand-total">—</div></div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container">© Tapsters</div></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/currency.js"></script>
+  <script src="js/recently.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/checkout.js"></script>
+</body>
+</html>

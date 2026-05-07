@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sell on Tapsters</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="container">
+    <div class="form-card">
+      <h1>List a new item</h1>
+      <p class="muted">Sales are only available to registered Tapsters users.</p>
+
+      <div id="auth-gate" class="notice hidden">
+        You must <a href="auth.html?next=create-listing.html">log in</a> or
+        <a href="auth.html?next=create-listing.html#register">create an account</a> to sell.
+      </div>
+
+      <div id="form-error" class="error hidden"></div>
+      <div id="form-success" class="success hidden"></div>
+
+      <form id="listing-form" class="hidden">
+        <div class="form-row">
+          <label for="title">Title</label>
+          <input type="text" id="title" required maxlength="120" placeholder="Vintage purple jacket" />
+        </div>
+
+        <div class="form-row">
+          <label for="description">Description</label>
+          <textarea id="description" rows="5" placeholder="Describe condition, brand, sizing…"></textarea>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-row">
+            <label for="category">Category</label>
+            <select id="category" required></select>
+          </div>
+          <div class="form-row">
+            <label for="stock">Stock</label>
+            <input type="number" id="stock" value="1" min="1" max="999" />
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-row">
+            <label for="price">Price</label>
+            <input type="number" id="price" required min="0" step="0.01" placeholder="9.99" />
+          </div>
+          <div class="form-row">
+            <label>Currency</label>
+            <div class="cur-pick" role="radiogroup" aria-label="Currency">
+              <label><input type="radio" name="currency" value="USD" checked /><span>$ USD</span></label>
+              <label><input type="radio" name="currency" value="EUR" /><span>€ EUR</span></label>
+              <label><input type="radio" name="currency" value="GBP" /><span>£ GBP</span></label>
+              <label><input type="radio" name="currency" value="UAH" /><span>₴ UAH</span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="image_url">Image URL <span class="muted">(optional)</span></label>
+          <input type="url" id="image_url" placeholder="https://…" />
+        </div>
+
+        <button class="btn full" type="submit" id="submit-btn">Publish listing</button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container">© Tapsters</div></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/currency.js"></script>
+  <script src="js/recently.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/listing.js"></script>
+</body>
+</html>
