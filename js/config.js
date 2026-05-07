@@ -6,8 +6,8 @@
 // `window.TAPSTERS_CONFIG` before the rest of the app loads.
 
 window.TAPSTERS_CONFIG = window.TAPSTERS_CONFIG || {
-  SUPABASE_URL: "https://yhlekrpymdglzqwitofi.supabase.co",
-  SUPABASE_ANON_KEY: "sb_publishable_JS7YBBTbzAwuC2m6bTrO6g_dFOfzl3x",
+  SUPABASE_URL: "https://bhgrxzaldcojqlzergzr.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_ZaC_BScQxuEMwkPwIAPGaQ_awdEYOF3",
 };
 
 // Currency display options (1 unit of base currency = these multipliers).
