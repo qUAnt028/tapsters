@@ -14,9 +14,16 @@
 
   function cardHtml(item) {
     const priceStr = window.tapCurrency.formatItem(item.price, item.currency);
+    const id = encodeURIComponent(item.id);
     return `
-      <a class="card" href="item.html?id=${encodeURIComponent(item.id)}">
-        <div class="thumb">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="">` : placeholderThumb()}</div>
+      <a class="card" href="item.html?id=${id}" data-card-id="${escapeHtml(item.id)}">
+        <div class="thumb">
+          ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="">` : placeholderThumb()}
+          <div class="quick-actions">
+            <button type="button" class="btn secondary" data-quick="cart" data-id="${escapeHtml(item.id)}">Додати у кошик</button>
+            <button type="button" class="btn" data-quick="buy" data-id="${escapeHtml(item.id)}">Замовити</button>
+          </div>
+        </div>
         <div class="body">
           <div class="title">${escapeHtml(item.title)}</div>
           <div class="meta">
@@ -26,6 +33,67 @@
         </div>
       </a>
     `;
+  }
+
+  // Cache the loaded items for the home grid so the quick-action handler
+  // can build a cart payload (title/price/etc) without an extra fetch.
+  const itemsCache = new Map();
+  let recentCache = [];
+
+  async function quickAddToCart(itemId) {
+    const item = itemsCache.get(itemId) || recentCache.find((r) => r.id === itemId);
+    if (!item) return;
+    const t = window.tapsters;
+    const u = t && t.isConfigured ? await t.getUser() : null;
+    if (!u) {
+      location.href = `auth.html?next=${encodeURIComponent("item.html?id=" + itemId)}`;
+      return;
+    }
+    if (item.seller_id && item.seller_id === u.id) {
+      alert("You can't add your own listing to your cart.");
+      return;
+    }
+    try {
+      await window.tapCart.add(item, 1);
+      const cartMenu = document.getElementById("cart-menu");
+      if (cartMenu) cartMenu.classList.add("open");
+      document.dispatchEvent(new CustomEvent("tap:cartchange"));
+    } catch (e) {
+      alert(e.message || "Could not add to cart.");
+    }
+  }
+
+  async function quickBuyNow(itemId) {
+    const item = itemsCache.get(itemId) || recentCache.find((r) => r.id === itemId);
+    if (!item) return;
+    const t = window.tapsters;
+    const u = t && t.isConfigured ? await t.getUser() : null;
+    if (!u) {
+      location.href = `auth.html?next=${encodeURIComponent("item.html?id=" + itemId)}`;
+      return;
+    }
+    if (item.seller_id && item.seller_id === u.id) {
+      alert("You can't buy your own listing.");
+      return;
+    }
+    try { await window.tapCart.add(item, 1); } catch (e) { /* may already be in cart */ }
+    location.href = "checkout.html";
+  }
+
+  function wireQuickActionsOnce() {
+    if (wireQuickActionsOnce.done) return;
+    wireQuickActionsOnce.done = true;
+    document.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("[data-quick]");
+      if (!btn) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      const action = btn.getAttribute("data-quick");
+      const id = btn.getAttribute("data-id");
+      if (!id) return;
+      if (action === "cart") quickAddToCart(id);
+      else if (action === "buy") quickBuyNow(id);
+    });
   }
 
   async function loadCategories(active) {
@@ -66,6 +134,7 @@
     const empty = $("#listing-empty");
     grid.innerHTML = "";
     empty.classList.add("hidden");
+    itemsCache.clear();
 
     const t = window.tapsters;
 
@@ -73,7 +142,7 @@
     if (t && t.isConfigured) {
       let query = t.client
         .from("items")
-        .select("id, title, price, currency, image_url, category_id, sold, created_at, categories:categories ( name, slug )")
+        .select("id, title, price, currency, image_url, seller_id, category_id, sold, created_at, categories:categories ( name, slug )")
         .eq("sold", false)
         .order("created_at", { ascending: false })
         .limit(60);
@@ -93,6 +162,8 @@
       }
     }
 
+    items.forEach((it) => itemsCache.set(it.id, it));
+
     if (!items.length) {
       empty.classList.remove("hidden");
       return;
@@ -104,7 +175,9 @@
   function paintRecentlyViewed() {
     const grid = $("#recent-grid");
     const empty = $("#recent-empty");
+    if (!grid || !empty) return;
     const items = window.tapRecent.list();
+    recentCache = items;
     if (!items.length) {
       grid.innerHTML = "";
       empty.classList.remove("hidden");
@@ -145,8 +218,13 @@
     });
 
     wireCurrency();
+    wireQuickActionsOnce();
     loadCategories(category);
     loadListings({ q, category });
     paintRecentlyViewed();
+
+    // Re-paint Recently Viewed whenever the active user (and therefore the
+    // localStorage bucket) changes — e.g. on login, logout, or account switch.
+    document.addEventListener("tap:recentlychange", paintRecentlyViewed);
   });
 })();

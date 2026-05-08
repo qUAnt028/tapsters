@@ -84,6 +84,12 @@ If you previously ran an older version of the schema that had a `comments`
 table, re-running `supabase/schema.sql` will drop it and create the new
 `reviews` table in its place.
 
+> **Migration tip — _"Could not find the table 'public.reviews' in the schema cache"_**
+> If you see this error when leaving a seller review, it means your project
+> still has the old schema. Open the Supabase **SQL Editor** and re-run
+> [`supabase/schema.sql`](../supabase/schema.sql); the page should work
+> immediately after.
+
 JavaScript modules live under `js/` and are intentionally framework-free so
 they're easy to read and tweak.
 

@@ -154,15 +154,47 @@ input, textarea, select { font-family: inherit; font-size: 1rem; }
   min-width: 280px;
   box-shadow: var(--shadow-lg);
   padding: 12px;
-  display: none;
   z-index: 90;
+  /* Smooth open/close. We keep the panel in the DOM (no display:none)
+     and use opacity + transform + visibility so it can transition. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(.98);
+  pointer-events: none;
+  transition:
+    opacity .18s ease,
+    transform .18s ease,
+    visibility 0s linear .18s;
 }
-.menu.open .menu-panel { display: block; }
+.menu.open .menu-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  transition:
+    opacity .18s ease,
+    transform .18s ease,
+    visibility 0s;
+}
 .menu-panel.left { left: 0; right: auto; }
 .menu-panel h4 { margin: 0 0 8px; color: var(--purple-700); }
 .menu-panel ul { list-style: none; padding: 0; margin: 0; }
-.menu-panel li { padding: 8px 10px; border-radius: 8px; cursor: pointer; }
-.menu-panel li:hover { background: var(--purple-50); }
+.menu-panel li {
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease, transform .12s ease;
+}
+.menu-panel li:hover {
+  background: var(--purple-50);
+  transform: translateX(2px);
+}
+.icon-btn {
+  transition: background .14s ease, color .14s ease, transform .14s ease;
+}
+.icon-btn:hover {
+  transform: translateY(-1px);
+}
 
 /* ---------- Hero / Sections ---------- */
 .hero {
@@ -217,6 +249,9 @@ section.section h2 {
   display: flex; flex-direction: column;
   transition: transform .15s, box-shadow .15s;
   border: 1px solid var(--purple-100);
+  position: relative;
+  text-decoration: none;
+  color: inherit;
 }
 .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .card .thumb {
@@ -225,8 +260,49 @@ section.section h2 {
   display: grid; place-items: center;
   overflow: hidden;
   color: var(--purple-300);
+  position: relative;
 }
 .card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Hover-only quick action overlay on home-page item cards. */
+.card .quick-actions {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 100%);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .18s ease, transform .18s ease;
+  pointer-events: none;
+}
+.card:hover .quick-actions,
+.card:focus-within .quick-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.card .quick-actions .btn {
+  padding: 6px 12px;
+  font-size: .85rem;
+  border-radius: 999px;
+  flex: 0 1 auto;
+}
+.card .quick-actions .btn.secondary {
+  background: var(--white);
+  color: var(--purple-700);
+}
+@media (hover: none) {
+  /* Touch devices: keep the buttons visible since there's no hover. */
+  .card .quick-actions {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    background: rgba(0,0,0,.45);
+  }
+}
 .card .body { padding: 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 .card .title {
   font-weight: 600;

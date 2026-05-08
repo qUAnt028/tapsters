@@ -200,7 +200,16 @@
         $("#review-submit").textContent = "Update review";
       } catch (e) {
         const er = $("#review-error");
-        er.textContent = e.message || "Could not post review.";
+        const msg = (e && e.message) || "";
+        // PostgREST returns this when a table referenced by the client
+        // doesn't exist in the project yet (e.g. schema.sql wasn't re-run
+        // after the comments → reviews refactor).
+        if (/public\.reviews/i.test(msg) || /schema cache/i.test(msg)) {
+          er.innerHTML = 'Reviews table is missing on your Supabase project. ' +
+            'Re-run <code>supabase/schema.sql</code> in the SQL editor and reload this page.';
+        } else {
+          er.textContent = msg || "Could not post review.";
+        }
         er.classList.remove("hidden");
       }
     });

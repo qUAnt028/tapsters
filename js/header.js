@@ -192,6 +192,30 @@
     });
   }
 
+  async function syncRecentlyViewedScope(user) {
+    if (!window.tapRecent || typeof window.tapRecent.setUser !== "function") return;
+    const changed = window.tapRecent.setUser(user ? user.id : null);
+    if (changed) document.dispatchEvent(new CustomEvent("tap:recentlychange"));
+  }
+
+  async function logout() {
+    const t = window.tapsters;
+    try {
+      if (t && t.isConfigured) await t.signOut();
+    } catch (e) {
+      console.error("signOut failed:", e);
+    }
+    // Clear guest-scope recently-viewed so it doesn't inherit anything.
+    if (window.tapRecent && typeof window.tapRecent.clearGuest === "function") {
+      window.tapRecent.clearGuest();
+    }
+    if (window.tapRecent && typeof window.tapRecent.setUser === "function") {
+      window.tapRecent.setUser(null);
+    }
+    // Hard-navigate so any in-page state is rebuilt from scratch.
+    window.location.assign("index.html");
+  }
+
   async function wireAccountArea() {
     const t = window.tapsters;
     const right = document.getElementById("auth-area");
@@ -199,6 +223,7 @@
 
     async function paint() {
       const user = t && t.isConfigured ? await t.getUser() : null;
+      await syncRecentlyViewedScope(user);
       if (user) {
         right.innerHTML = `
           <a class="icon-btn" href="create-listing.html"><span>Sell</span></a>
@@ -216,12 +241,19 @@
         `;
         const menu = document.getElementById("acct-menu");
         wireMenu("acct-btn", menu);
-        menu.querySelector('[data-act="cabinet"]').addEventListener("click", () => location.href = "cabinet.html");
-        menu.querySelector('[data-act="orders"]').addEventListener("click", () => location.href = "cabinet.html#orders");
-        menu.querySelector('[data-act="listings"]').addEventListener("click", () => location.href = "cabinet.html#listings");
-        menu.querySelector('[data-act="logout"]').addEventListener("click", async () => {
-          await t.signOut();
-          location.href = "index.html";
+
+        // One delegated click handler keeps things robust even if individual
+        // <li>s are re-rendered by paint().
+        menu.querySelector(".menu-panel").addEventListener("click", (ev) => {
+          const li = ev.target.closest("[data-act]");
+          if (!li) return;
+          ev.stopPropagation();
+          ev.preventDefault();
+          const act = li.getAttribute("data-act");
+          if (act === "cabinet") location.assign("cabinet.html");
+          else if (act === "orders") location.assign("cabinet.html#orders");
+          else if (act === "listings") location.assign("cabinet.html#listings");
+          else if (act === "logout") logout();
         });
       } else {
         right.innerHTML = `
