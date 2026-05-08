@@ -1,6 +1,26 @@
 (function () {
   const $ = (s) => document.querySelector(s);
 
+  // Returns a cleaned URL string, "" for empty input, or false if it isn't a URL.
+  // Also tolerates pasted links without a scheme by prepending "https://".
+  function normalizeImageUrl(raw) {
+    let v = (raw || "").trim();
+    if (!v) return "";
+    // strip wrapping quotes / angle brackets that some users paste
+    v = v.replace(/^[<"'\s]+|[>"'\s]+$/g, "");
+    if (!v) return "";
+    if (!/^https?:\/\//i.test(v) && !/^data:image\//i.test(v)) {
+      v = "https://" + v.replace(/^\/+/, "");
+    }
+    try {
+      const u = new URL(v);
+      if (u.protocol !== "http:" && u.protocol !== "https:" && u.protocol !== "data:") return false;
+      return u.toString();
+    } catch (_) {
+      return false;
+    }
+  }
+
   function showError(msg) {
     const e = $("#form-error");
     if (e) {
@@ -67,7 +87,7 @@
       const stock = parseInt($("#stock").value || "1", 10);
       const price = parseFloat($("#price").value);
       const currencyEl = document.querySelector('input[name="currency"]:checked');
-      const image_url = $("#image_url").value.trim();
+      const image_url = normalizeImageUrl($("#image_url").value);
 
       if (!title || isNaN(price) || price < 0) {
         showError("Please fill in title and a valid price.");
@@ -75,6 +95,10 @@
       }
       if (!category_id) {
         showError("Please pick a category.");
+        return;
+      }
+      if (image_url === false) {
+        showError("That image URL doesn't look right. Paste a direct link like https://example.com/photo.jpg.");
         return;
       }
 

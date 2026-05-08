@@ -62,7 +62,8 @@
 
         <div class="form-row">
           <label for="image_url">Посилання на фото <span class="muted">(Опціонально)</span></label>
-          <input type="url" id="image_url" placeholder="https://…" />
+          <input type="text" inputmode="url" id="image_url" placeholder="https://example.com/photo.jpg" autocomplete="off" />
+          <div class="muted" style="font-size:.8rem; margin-top:4px">Вставте пряме посилання на зображення. Ми самі додамо <code>https://</code>, якщо ви забудете.</div>
         </div>
 
         <button class="btn full" type="submit" id="submit-btn">Створити лот</button>
