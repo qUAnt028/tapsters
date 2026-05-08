@@ -71,12 +71,29 @@
 
   async function fetchReviews(subject_id) {
     const t = window.tapsters;
-    const { data } = await t.client
+    // Fetch reviews and reviewer profiles in two passes. We deliberately do
+    // NOT use a PostgREST embed (e.g. `profiles!reviews_user_id_fkey`) because
+    // `reviews.user_id` references `auth.users(id)`, not `public.profiles(id)`,
+    // so PostgREST cannot resolve a direct relationship from reviews to
+    // profiles and the embed returns 400 Bad Request.
+    const { data: reviews, error } = await t.client
       .from("reviews")
-      .select("id, content, rating, user_id, created_at, profiles:profiles!reviews_user_id_fkey ( username, full_name )")
+      .select("id, content, rating, user_id, created_at")
       .eq("subject_id", subject_id)
       .order("created_at", { ascending: false });
-    return data || [];
+    if (error) { console.error("fetchReviews:", error); return []; }
+    if (!reviews || !reviews.length) return [];
+
+    const userIds = [...new Set(reviews.map((r) => r.user_id).filter(Boolean))];
+    let byId = new Map();
+    if (userIds.length) {
+      const { data: profiles } = await t.client
+        .from("profiles")
+        .select("id, username, full_name")
+        .in("id", userIds);
+      byId = new Map((profiles || []).map((p) => [p.id, p]));
+    }
+    return reviews.map((r) => ({ ...r, profiles: byId.get(r.user_id) || null }));
   }
 
   function listingCard(item) {
