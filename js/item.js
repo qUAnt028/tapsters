@@ -35,15 +35,16 @@
 
   async function fetchSellerRating(seller_id) {
     const t = window.tapsters;
-    if (!t || !t.isConfigured || !seller_id) return { avg: null, count: 0 };
-    const { data } = await t.client
+    if (!t || !t.isConfigured || !seller_id) return { avg: null, count: 0, total: 0 };
+    const { data, error } = await t.client
       .from("reviews")
       .select("rating")
-      .eq("subject_id", seller_id)
-      .not("rating", "is", null);
-    if (!data || !data.length) return { avg: null, count: 0 };
-    const avg = data.reduce((s, r) => s + r.rating, 0) / data.length;
-    return { avg, count: data.length };
+      .eq("subject_id", seller_id);
+    if (error) { console.error("fetchSellerRating:", error); return { avg: null, count: 0, total: 0 }; }
+    if (!data || !data.length) return { avg: null, count: 0, total: 0 };
+    const rated = data.filter((r) => r.rating != null);
+    const avg = rated.length ? rated.reduce((s, r) => s + r.rating, 0) / rated.length : null;
+    return { avg, count: rated.length, total: data.length };
   }
 
   function paintStars(root, value) {
@@ -107,6 +108,11 @@
       paintStars($("#seller-stars"), rating.avg);
       const r = Math.round(rating.avg * 10) / 10;
       $("#seller-rating-text").textContent = `${r.toFixed(1)} · ${rating.count} review${rating.count === 1 ? "" : "s"}`;
+    } else if (rating.total) {
+      // There are reviews about the seller, just none of them carry a star
+      // rating yet — surface that instead of falsely saying "No reviews yet".
+      $("#seller-stars").innerHTML = "";
+      $("#seller-rating-text").textContent = `${rating.total} review${rating.total === 1 ? "" : "s"} · no rating yet`;
     } else {
       $("#seller-stars").innerHTML = "";
       $("#seller-rating-text").textContent = "No reviews yet";

@@ -25,7 +25,14 @@
         s.className = "star" + (i <= v ? " on" : "");
         s.textContent = "★";
         if (interactive) {
-          s.addEventListener("click", () => { current = i; paint(i); onPick && onPick(i); });
+          s.addEventListener("click", () => {
+            // Click the same star you already had selected to clear the
+            // rating (post a comment-only review).
+            const next = current === i ? 0 : i;
+            current = next;
+            paint(next);
+            onPick && onPick(next);
+          });
           s.addEventListener("mouseenter", () => paint(i));
           s.addEventListener("mouseleave", () => paint(current));
         }
@@ -112,27 +119,42 @@
     `;
   }
 
-  let chosenRating = 0;
+  // Default a fresh review to 5 stars so most reviews carry a rating; the user
+  // can click any star to lower the rating, or click the same star again to
+  // clear it (see buildStars onPick handling below).
+  let chosenRating = 5;
 
-  async function paintReviews(subject_id) {
-    const list = await fetchReviews(subject_id);
+  // Cache of the last fetched review list. We use this so an optimistic update
+  // after a post can re-render with the just-saved row even before the
+  // server-side fetch completes (or in case the fetch hits a transient issue).
+  let lastReviewsCache = [];
+
+  function reviewItemHtml(r) {
+    const reviewerName =
+      (r.profiles && (r.profiles.full_name || r.profiles.username)) || "Tapster";
+    const ratingHtml = r.rating
+      ? `<div class="stars" data-readonly="true">${"★".repeat(r.rating)}<span style="color:var(--gray-300)">${"★".repeat(5 - r.rating)}</span></div>`
+      : `<div class="muted" style="font-size:.8rem">No star rating</div>`;
+    return `
+      <div class="comment" data-review-id="${escapeHtml(r.id || "")}">
+        <div class="who">
+          <strong>${escapeHtml(reviewerName)}</strong>
+          <span>${new Date(r.created_at).toLocaleDateString()}</span>
+        </div>
+        ${ratingHtml}
+        <div class="body">${escapeHtml(r.content)}</div>
+      </div>
+    `;
+  }
+
+  function renderReviewsList(list) {
     const root = $("#reviews-list");
-    if (!list.length) {
+    if (!list || !list.length) {
       root.innerHTML = '<div class="empty">No reviews yet for this seller.</div>';
     } else {
-      root.innerHTML = list.map((r) => `
-        <div class="comment">
-          <div class="who">
-            <strong>${escapeHtml((r.profiles && (r.profiles.full_name || r.profiles.username)) || "Tapster")}</strong>
-            <span>${new Date(r.created_at).toLocaleDateString()}</span>
-          </div>
-          ${r.rating ? `<div class="stars" data-readonly="true">${"★".repeat(r.rating)}<span style="color:var(--gray-300)">${"★".repeat(5 - r.rating)}</span></div>` : ""}
-          <div class="body">${escapeHtml(r.content)}</div>
-        </div>
-      `).join("");
+      root.innerHTML = list.map(reviewItemHtml).join("");
     }
-
-    const rated = list.filter((r) => r.rating);
+    const rated = (list || []).filter((r) => r.rating);
     const stars = $("#seller-stars");
     const txt = $("#seller-rating-text");
     if (rated.length) {
@@ -140,10 +162,30 @@
       paintStars(stars, avg);
       const r = Math.round(avg * 10) / 10;
       txt.textContent = `${r.toFixed(1)} · ${rated.length} review${rated.length === 1 ? "" : "s"}`;
+    } else if (list && list.length) {
+      // Reviews exist but none carry a rating — say so explicitly instead
+      // of "No reviews yet", which used to be misleading.
+      stars.innerHTML = "";
+      txt.textContent = `${list.length} review${list.length === 1 ? "" : "s"} · no rating yet`;
     } else {
       stars.innerHTML = "";
       txt.textContent = "No reviews yet";
     }
+  }
+
+  async function paintReviews(subject_id) {
+    const list = await fetchReviews(subject_id);
+    lastReviewsCache = list;
+    renderReviewsList(list);
+  }
+
+  function flashSuccess(msg) {
+    const note = $("#review-success");
+    if (!note) return;
+    note.textContent = msg;
+    note.classList.remove("hidden");
+    clearTimeout(flashSuccess._t);
+    flashSuccess._t = setTimeout(() => note.classList.add("hidden"), 4000);
   }
 
   async function setupReviewForm(subject_id) {
@@ -169,12 +211,18 @@
     gate.classList.add("hidden");
     form.classList.remove("hidden");
 
+    // Reviewer profile (used for optimistic rendering of just-posted reviews
+    // before the round-trip fetch returns).
+    const myProfile = await fetchProfile(me.id);
+
+    // Build rating input pre-filled with the default (5 stars for a new
+    // review, the user's existing rating when editing — handled below).
     const ratingInput = $("#rating-input");
-    const starsEl = buildStars(0, { interactive: true, onPick: (v) => { chosenRating = v; } });
+    const starsEl = buildStars(chosenRating, { interactive: true, onPick: (v) => { chosenRating = v; } });
     starsEl.id = "rating-input";
     ratingInput.replaceWith(starsEl);
 
-    // If user already left a review, prefill
+    // If user already left a review, prefill the form with it.
     const { data: existing } = await t.client
       .from("reviews")
       .select("id, content, rating")
@@ -194,6 +242,7 @@
     form.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       $("#review-error").classList.add("hidden");
+      const submitBtn = $("#review-submit");
       const content = $("#review-content").value.trim();
       if (!content) {
         const e = $("#review-error");
@@ -201,6 +250,9 @@
         e.classList.remove("hidden");
         return;
       }
+      submitBtn.disabled = true;
+      const originalLabel = submitBtn.textContent;
+      submitBtn.textContent = "Posting…";
       try {
         const payload = {
           subject_id,
@@ -208,14 +260,37 @@
           content,
           rating: chosenRating || null,
         };
-        // upsert keeps it to "one review per (seller, reviewer)"
-        const { error } = await t.client
+        // upsert keeps it to "one review per (seller, reviewer)"; chain
+        // .select().single() so we get the saved row back even when the
+        // client-side cache fetch is stale or blocked.
+        const { data: saved, error } = await t.client
           .from("reviews")
-          .upsert(payload, { onConflict: "subject_id,user_id" });
+          .upsert(payload, { onConflict: "subject_id,user_id" })
+          .select("id, content, rating, user_id, created_at")
+          .single();
         if (error) throw error;
-        await paintReviews(subject_id);
-        $("#review-submit").textContent = "Update review";
+
+        // Optimistic update: drop the user's previous review (if any) from
+        // the cached list, prepend the just-saved one, and re-render. This
+        // guarantees the user sees their review immediately even if the
+        // refetch below races or fails.
+        const myRow = {
+          ...saved,
+          profiles: myProfile
+            ? { full_name: myProfile.full_name, username: myProfile.username }
+            : null,
+        };
+        const filtered = (lastReviewsCache || []).filter((r) => r.user_id !== me.id);
+        lastReviewsCache = [myRow, ...filtered];
+        renderReviewsList(lastReviewsCache);
+
+        // Best-effort refetch to reconcile with anything else that changed.
+        paintReviews(subject_id).catch((err) => console.error("refetch reviews:", err));
+
+        submitBtn.textContent = "Update review";
+        flashSuccess(existing ? "Review updated." : "Review posted.");
       } catch (e) {
+        submitBtn.textContent = originalLabel;
         const er = $("#review-error");
         const msg = (e && e.message) || "";
         // PostgREST returns this when a table referenced by the client
@@ -228,6 +303,8 @@
           er.textContent = msg || "Could not post review.";
         }
         er.classList.remove("hidden");
+      } finally {
+        submitBtn.disabled = false;
       }
     });
   }

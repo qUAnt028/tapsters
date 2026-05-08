@@ -42,7 +42,10 @@
 
         <form id="review-form" class="form-card hidden" style="margin: 0 0 18px;">
           <div class="form-row">
-            <label>Your rating</label>
+            <label>
+              Your rating
+              <span class="muted" style="font-weight:normal; font-size:.85rem">— click stars to set, click the same star again to clear</span>
+            </label>
             <span class="stars" id="rating-input"></span>
           </div>
           <div class="form-row">
@@ -50,6 +53,7 @@
             <textarea id="review-content" rows="3" placeholder="Share your experience with this seller…"></textarea>
           </div>
           <div id="review-error" class="error hidden"></div>
+          <div id="review-success" class="notice hidden" style="background:#dcfce7; color:#166534; border-color:#bbf7d0;"></div>
           <button class="btn" type="submit" id="review-submit">Post review</button>
         </form>
 
@@ -61,12 +65,12 @@
   <footer class="site-footer"><div class="container">© Tapsters</div></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js"></script>
-  <script src="js/supabase.js"></script>
-  <script src="js/currency.js"></script>
-  <script src="js/recently.js"></script>
-  <script src="js/cart.js"></script>
-  <script src="js/header.js"></script>
-  <script src="js/seller.js"></script>
+  <script src="js/config.js?v=20260508c"></script>
+  <script src="js/supabase.js?v=20260508c"></script>
+  <script src="js/currency.js?v=20260508c"></script>
+  <script src="js/recently.js?v=20260508c"></script>
+  <script src="js/cart.js?v=20260508c"></script>
+  <script src="js/header.js?v=20260508c"></script>
+  <script src="js/seller.js?v=20260508c"></script>
 </body>
 </html>
