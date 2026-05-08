@@ -200,20 +200,46 @@
 
   async function logout() {
     const t = window.tapsters;
+
+    // Fire signOut, but never let it block the UI for more than ~1.5s.
+    // This way the user always sees an immediate response when they click.
+    if (t && t.isConfigured) {
+      try {
+        await Promise.race([
+          t.signOut(),
+          new Promise((res) => setTimeout(res, 1500)),
+        ]);
+      } catch (e) { console.error("signOut failed:", e); }
+    }
+
+    // Belt-and-suspenders: even if signOut() didn't finish (e.g. offline),
+    // wipe Supabase's auth tokens from localStorage so the next page load
+    // is unauthenticated.
     try {
-      if (t && t.isConfigured) await t.signOut();
-    } catch (e) {
-      console.error("signOut failed:", e);
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("sb-") && k.endsWith("-auth-token")) keys.push(k);
+      }
+      keys.forEach((k) => localStorage.removeItem(k));
+    } catch (e) { /* ignore */ }
+
+    // Wipe guest recently-viewed bucket so the next visitor on this device
+    // doesn't inherit anything, and reset the active scope to "guest".
+    if (window.tapRecent) {
+      if (typeof window.tapRecent.clearGuest === "function") window.tapRecent.clearGuest();
+      if (typeof window.tapRecent.setUser === "function") window.tapRecent.setUser(null);
     }
-    // Clear guest-scope recently-viewed so it doesn't inherit anything.
-    if (window.tapRecent && typeof window.tapRecent.clearGuest === "function") {
-      window.tapRecent.clearGuest();
+
+    // Reload if we're already on home; otherwise hard-navigate to home.
+    // Using replace() so the logged-in page doesn't sit in browser history.
+    const path = (location.pathname || "").toLowerCase();
+    const onHome = path === "/" || path.endsWith("/") || path.endsWith("/index.html") || path === "/index.html";
+    if (onHome) {
+      window.location.reload();
+    } else {
+      window.location.replace("index.html");
     }
-    if (window.tapRecent && typeof window.tapRecent.setUser === "function") {
-      window.tapRecent.setUser(null);
-    }
-    // Hard-navigate so any in-page state is rebuilt from scratch.
-    window.location.assign("index.html");
   }
 
   async function wireAccountArea() {
