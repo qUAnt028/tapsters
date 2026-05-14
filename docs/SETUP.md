@@ -109,6 +109,27 @@ conversation back up from **Cabinet → Messages**.
 > [`supabase/schema.sql`](../supabase/schema.sql) in the Supabase SQL Editor.
 > The script is idempotent and only creates the chat tables on first run.
 
+### Order notifications + chat deletion
+
+When a buyer completes checkout, the buyer's browser inserts one chat
+message per purchased item into the corresponding seller's chat thread
+(creating the thread on demand). The message is rendered as a receipt
+card in the chat UI. To support this, the `messages` table grew two new
+columns (`kind`, `order_id`) and `chats` gained a `DELETE` policy so
+either participant can wipe the thread. **Re-run
+[`supabase/schema.sql`](../supabase/schema.sql) in the SQL Editor** if
+the new columns/policy aren't present yet — the `add column if not
+exists` migration is idempotent.
+
+### Toast notifications
+
+`js/notifications.js` polls every 10 seconds for new messages addressed
+to the current user and pops a toast in the bottom-right of the screen.
+Each toast auto-fades after 5 s; hovering pauses the timer, the ×
+button dismisses immediately, and clicking the toast opens the relevant
+chat. The "last seen" timestamp is stored per-account in `localStorage`
+so the same message isn't surfaced twice.
+
 JavaScript modules live under `js/` and are intentionally framework-free so
 they're easy to read and tweak.
 

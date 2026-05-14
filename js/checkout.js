@@ -100,6 +100,122 @@
     return null;
   }
 
+  // Sends one chat message per purchased item to the corresponding
+  // seller, using a JSON payload so the chat UI can render it as a
+  // receipt card. We upsert the chat first (the (item_id, buyer_id) pair
+  // is unique), then insert the message. RLS only allows inserting
+  // messages as the auth'd user, so the buyer is always the sender.
+  async function notifySellersAboutOrder(ctx) {
+    const t = window.tapsters;
+    if (!t || !t.isConfigured || !currentUser) return;
+
+    // Pull the buyer's display name once so each notification renders it.
+    let buyerName = "Buyer";
+    try {
+      const { data: prof } = await t.client
+        .from("profiles")
+        .select("username, full_name")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+      if (prof) buyerName = prof.full_name || prof.username || buyerName;
+    } catch (_) { /* fall through */ }
+
+    for (const it of ctx.cartItems) {
+      const sellerId = ctx.sellerByItem[it.id];
+      if (!sellerId || sellerId === currentUser.id) continue; // skip self-orders / missing seller
+
+      // 1) Ensure a chat row exists for (item, buyer).
+      let chatId = null;
+      try {
+        const existing = await t.client
+          .from("chats")
+          .select("id")
+          .eq("item_id", it.id)
+          .eq("buyer_id", currentUser.id)
+          .maybeSingle();
+        if (existing.data && existing.data.id) {
+          chatId = existing.data.id;
+        } else {
+          const created = await t.client
+            .from("chats")
+            .insert({
+              item_id: it.id,
+              item_title: it.title,
+              buyer_id: currentUser.id,
+              seller_id: sellerId,
+            })
+            .select("id")
+            .single();
+          if (created.error) throw created.error;
+          chatId = created.data.id;
+        }
+      } catch (e) {
+        // Some other client may have raced us to create the chat; try to
+        // recover by re-selecting.
+        try {
+          const recover = await t.client
+            .from("chats")
+            .select("id")
+            .eq("item_id", it.id)
+            .eq("buyer_id", currentUser.id)
+            .maybeSingle();
+          chatId = recover.data && recover.data.id;
+        } catch (_) {}
+        if (!chatId) continue;
+      }
+
+      // 2) Build the receipt payload — a JSON blob the chat renderer
+      //    recognises and renders as a card. Everything the seller needs
+      //    is embedded here so they don't have to fetch the order row
+      //    (and RLS wouldn't let them anyway — `orders` is read-self).
+      const payload = {
+        kind: "order_notification",
+        order_id: ctx.order_id,
+        item_id: it.id,
+        item_title: it.title,
+        quantity: it.quantity,
+        unit_price: it.price,
+        currency: it.currency,
+        total: Number((it.price * it.quantity).toFixed(2)),
+        total_currency: it.currency,
+        delivery_method: ctx.delivery,
+        delivery_branch: ctx.branch || null,
+        delivery_address: ctx.address || null,
+        payment_method: ctx.payment,
+        card_last4: ctx.card_last4 || null,
+        buyer_name: buyerName,
+      };
+
+      try {
+        await t.client.from("messages").insert({
+          chat_id: chatId,
+          sender_id: currentUser.id,
+          content: JSON.stringify(payload),
+          kind: "order",
+          order_id: ctx.order_id,
+        });
+      } catch (e) {
+        // If the schema hasn't been migrated for `kind` / `order_id` we
+        // fall back to a plain-text notification so the seller still
+        // gets a message — they just won't see the rich card.
+        try {
+          await t.client.from("messages").insert({
+            chat_id: chatId,
+            sender_id: currentUser.id,
+            content:
+              "🛒 New order from " + buyerName +
+              " — " + it.quantity + "× " + it.title +
+              " for " + window.tapCurrency.format(it.price * it.quantity, it.currency) +
+              ". Delivery: " + (ctx.delivery || "—") +
+              (ctx.branch ? ", " + ctx.branch : "") +
+              (ctx.address ? ", " + ctx.address : "") +
+              ". Payment: " + (ctx.payment === "prepay" ? "Prepayment" : "Cash on delivery") + ".",
+          });
+        } catch (_) { /* give up silently */ }
+      }
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     const t = window.tapsters;
     const gate = $("#auth-gate");
@@ -154,6 +270,18 @@
       submit.disabled = true;
 
       try {
+        // We need to know each item's seller_id to (a) open a chat with
+        // each seller and (b) so the order_items insert can be linked
+        // back to the right account. The cart payload doesn't carry the
+        // seller id, so fetch it now in a single query.
+        const itemIds = cartItems.map((it) => it.id);
+        const { data: sellerRows } = await t.client
+          .from("items")
+          .select("id, seller_id, title")
+          .in("id", itemIds);
+        const sellerByItem = {};
+        (sellerRows || []).forEach((r) => { sellerByItem[r.id] = r.seller_id; });
+
         // Total is stored in USD for consistency.
         let totalUSD = 0;
         cartItems.forEach((it) => {
@@ -194,10 +322,31 @@
         const { error: liErr } = await t.client.from("order_items").insert(lines);
         if (liErr) throw liErr;
 
+        // Notify each seller via chat. The buyer is the message sender
+        // (so RLS allows the insert) and the chat is created on demand.
+        // Non-fatal: if any of this fails, the order is still placed and
+        // the user sees a success screen.
+        try {
+          await notifySellersAboutOrder({
+            order_id: order.id,
+            cartItems,
+            sellerByItem,
+            delivery,
+            payment,
+            branch,
+            address,
+            card_last4,
+            totalUSD,
+          });
+        } catch (notifyErr) {
+          // Best-effort — the order is the source of truth and exists in
+          // the cabinet either way.
+          console.warn("order notification:", notifyErr);
+        }
+
         // Remove the purchased items from the marketplace so other shoppers
         // can't buy them again. RLS only allows deleting one's own items, so
         // we mark them as sold first; sold items are filtered everywhere.
-        const itemIds = cartItems.map((it) => it.id);
         try {
           await t.client.from("items").update({ sold: true }).in("id", itemIds);
         } catch (_) { /* non-fatal */ }

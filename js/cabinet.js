@@ -189,16 +189,37 @@
         : "Direct message";
       const when = new Date(c.last_message_at).toLocaleString();
       return `
-        <a class="chat-row" href="chat.html?id=${encodeURIComponent(c.id)}">
-          <div class="chat-avatar">${escapeHtml(initialFor(name))}</div>
-          <div class="chat-body">
-            <div class="chat-who">${escapeHtml(name)}</div>
-            <div class="chat-about">${escapeHtml(about)}</div>
-          </div>
-          <div class="chat-meta">${escapeHtml(when)}</div>
-        </a>
+        <div class="chat-row" data-chat-id="${escapeHtml(c.id)}">
+          <a class="chat-row-link" href="chat.html?id=${encodeURIComponent(c.id)}" style="display:contents">
+            <div class="chat-avatar">${escapeHtml(initialFor(name))}</div>
+            <div class="chat-body">
+              <div class="chat-who">${escapeHtml(name)}</div>
+              <div class="chat-about">${escapeHtml(about)}</div>
+            </div>
+            <div class="chat-meta">${escapeHtml(when)}</div>
+          </a>
+          <button class="chat-row-del js-delete-chat" type="button" data-id="${escapeHtml(c.id)}" title="Delete chat">Delete</button>
+        </div>
       `;
     }).join("") + '</div>';
+
+    root.querySelectorAll(".js-delete-chat").forEach((btn) => {
+      btn.addEventListener("click", async (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const id = btn.getAttribute("data-id");
+        if (!confirm("Delete this chat? Messages will be removed for both participants and can't be recovered.")) return;
+        btn.disabled = true;
+        try {
+          const { error: delErr } = await t.client.from("chats").delete().eq("id", id);
+          if (delErr) throw delErr;
+          await loadMessages(userId);
+        } catch (e) {
+          alert(e.message || "Could not delete this chat.");
+          btn.disabled = false;
+        }
+      });
+    });
   }
 
   async function loadAccount(user) {

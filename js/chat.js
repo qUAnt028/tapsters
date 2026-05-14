@@ -41,6 +41,80 @@
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
+  function formatMoney(amount, currency) {
+    if (window.tapCurrency && typeof window.tapCurrency.formatItem === "function") {
+      return window.tapCurrency.formatItem(amount, currency);
+    }
+    return String(amount) + " " + (currency || "");
+  }
+
+  function deliveryLabel(m) {
+    return ({
+      nova_poshta: "Nova Poshta",
+      ukrposhta:   "Ukrposhta",
+      meest:       "Meest",
+    })[m] || m || "—";
+  }
+  function paymentLabel(m) {
+    return ({ cod: "Cash on delivery", prepay: "Prepayment" })[m] || m || "—";
+  }
+
+  function tryParseOrderPayload(content) {
+    try {
+      var p = JSON.parse(content);
+      if (p && p.kind === "order_notification") return p;
+    } catch (_) {}
+    return null;
+  }
+
+  function renderOrderBubble(m, d, mine) {
+    var p = tryParseOrderPayload(m.content);
+    if (!p) {
+      // Fall back to plain text rendering if the JSON is malformed for
+      // any reason — we never want a chat message to render as raw JSON.
+      return '<div class="chat-msg ' + (mine ? "me" : "them") + '">' +
+        escapeHtml(m.content) +
+        '<span class="time">' + escapeHtml(formatTime(d)) + "</span>" +
+        "</div>";
+    }
+    var moneyLine =
+      p.quantity != null && p.unit_price != null && p.currency
+        ? p.quantity + " × " + formatMoney(p.unit_price, p.currency)
+        : "";
+    var totalLine =
+      p.total != null && p.total_currency
+        ? formatMoney(p.total, p.total_currency)
+        : "";
+    var orderRef =
+      p.order_id ? "Order #" + String(p.order_id).slice(0, 8) : "New order";
+
+    var kv = "";
+    if (p.item_title)       kv += '<div class="k">Item</div><div>' + escapeHtml(p.item_title) + (moneyLine ? " · " + escapeHtml(moneyLine) : "") + "</div>";
+    if (totalLine)          kv += '<div class="k">Total</div><div>' + escapeHtml(totalLine) + "</div>";
+    if (p.delivery_method)  kv += '<div class="k">Delivery</div><div>' + escapeHtml(deliveryLabel(p.delivery_method)) + "</div>";
+    if (p.delivery_branch)  kv += '<div class="k">Branch</div><div>' + escapeHtml(p.delivery_branch) + "</div>";
+    if (p.delivery_address) kv += '<div class="k">Address</div><div>' + escapeHtml(p.delivery_address) + "</div>";
+    if (p.payment_method) {
+      var payTxt = paymentLabel(p.payment_method) + (p.card_last4 ? " · ••••" + p.card_last4 : "");
+      kv += '<div class="k">Payment</div><div>' + escapeHtml(payTxt) + "</div>";
+    }
+    if (p.buyer_name)       kv += '<div class="k">Buyer</div><div>' + escapeHtml(p.buyer_name) + "</div>";
+
+    return (
+      '<div class="chat-msg order-card ' + (mine ? "me" : "them") + '"' +
+      (m.order_id ? ' data-order-id="' + escapeHtml(m.order_id) + '"' : "") +
+      ">" +
+        '<div class="order-head">' +
+          '<span class="order-emoji">🛒</span>' +
+          '<span>' + escapeHtml(orderRef) + '</span>' +
+        "</div>" +
+        '<div class="order-kv">' + kv + "</div>" +
+        '<a class="order-cta" href="cabinet.html#orders">View full receipt in your cabinet →</a>' +
+        '<span class="time">' + escapeHtml(formatTime(d)) + "</span>" +
+      "</div>"
+    );
+  }
+
   /** Render the full list of messages. We re-render top-to-bottom every
       time the message set grows; it's a small thread, performance is fine. */
   function renderStream(stream, messages, meId) {
@@ -57,12 +131,16 @@
         lastDay = d;
       }
       const mine = m.sender_id === meId;
-      parts.push(`
-        <div class="chat-msg ${mine ? "me" : "them"}">
-          ${escapeHtml(m.content)}
-          <span class="time">${escapeHtml(formatTime(d))}</span>
-        </div>
-      `);
+      if (m.kind === "order") {
+        parts.push(renderOrderBubble(m, d, mine));
+      } else {
+        parts.push(`
+          <div class="chat-msg ${mine ? "me" : "them"}">
+            ${escapeHtml(m.content)}
+            <span class="time">${escapeHtml(formatTime(d))}</span>
+          </div>
+        `);
+      }
     });
     stream.innerHTML = parts.join("");
     // Auto-scroll to bottom after re-render.
@@ -128,6 +206,27 @@
       itemLink.href = "item.html?id=" + encodeURIComponent(chat.item_id);
     } else {
       itemLink.classList.add("hidden");
+    }
+
+    // Delete-chat handler. RLS allows either participant to wipe the row;
+    // messages cascade-delete via the FK on messages.chat_id.
+    const deleteBtn = $("#chat-delete-btn");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", async () => {
+        if (!confirm("Delete this chat? This will remove all messages for both participants and can't be undone.")) return;
+        deleteBtn.disabled = true;
+        try {
+          const { error: delErr } = await t.client.from("chats").delete().eq("id", chatId);
+          if (delErr) throw delErr;
+          // Stop polling before navigating so we don't fire one last request
+          // against a now-gone row.
+          stopPolling();
+          location.replace("cabinet.html#messages");
+        } catch (e) {
+          alert(e.message || "Could not delete this chat.");
+          deleteBtn.disabled = false;
+        }
+      });
     }
 
     root.classList.remove("hidden");

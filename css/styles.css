@@ -1096,3 +1096,142 @@ section.section h2 {
   font-size: .9rem;
   padding: 16px;
 }
+
+/* Order-notification bubble: rendered inside .chat-msg but with extra
+   padding and a clickable surface so the recipient knows it's a receipt
+   card, not a regular text message. */
+.chat-msg.order-card {
+  display: block;
+  width: min(85%, 460px);
+  max-width: min(85%, 460px);
+  cursor: pointer;
+  padding: 12px 14px;
+}
+.chat-msg.order-card .order-head {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; margin-bottom: 4px;
+}
+.chat-msg.order-card .order-emoji { font-size: 1.1rem; }
+.chat-msg.order-card .order-kv {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 10px;
+  font-size: .9rem; margin-top: 6px;
+}
+.chat-msg.order-card .order-kv .k { opacity: .8; }
+.chat-msg.order-card .order-cta {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: .85rem;
+  text-decoration: underline;
+  opacity: .9;
+}
+
+/* Chat delete button in the chat header / cabinet messages row. */
+.chat-head .chat-actions {
+  display: flex; gap: 6px; flex-shrink: 0;
+  align-items: center;
+}
+.chat-row .chat-row-del {
+  margin-left: 6px; flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--surface-text-muted);
+  padding: 4px 9px;
+  border-radius: 8px;
+  font-size: .8rem;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.chat-row .chat-row-del:hover {
+  background: #fde8e8;
+  color: #b42a2a;
+  border-color: #f1bcbc;
+}
+[data-theme="dark"] .chat-row .chat-row-del {
+  border-color: #4a3a66; color: #c5b8e1;
+}
+[data-theme="dark"] .chat-row .chat-row-del:hover {
+  background: #5a2330; color: #ffb3b3; border-color: #7a3340;
+}
+
+/* ---------- Toast notifications (bottom-right stack) ---------- */
+#toast-stack {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  background: var(--surface);
+  color: var(--surface-text);
+  border: 1px solid var(--border-soft);
+  border-left: 4px solid var(--purple-600);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(43, 0, 92, .18);
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 36px 12px 14px;
+  position: relative;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(8px) scale(.98);
+  transition: opacity .25s ease, transform .25s ease;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.toast.hiding {
+  opacity: 0;
+  transform: translateY(8px) scale(.98);
+}
+.toast .toast-title {
+  font-weight: 700;
+  font-size: .95rem;
+  line-height: 1.25;
+}
+.toast .toast-sub {
+  font-size: .8rem;
+  color: var(--surface-text-muted);
+  margin-top: 2px;
+}
+.toast .toast-body {
+  margin-top: 6px;
+  font-size: .9rem;
+  line-height: 1.35;
+  /* Keep snippets compact in the toast — full message is on the chat page. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.toast .toast-close {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 24px; height: 24px;
+  border: 0; background: transparent;
+  color: var(--surface-text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+.toast .toast-close:hover {
+  background: var(--surface-2);
+  color: var(--surface-text);
+}
+[data-theme="dark"] .toast {
+  background: #1c142e;
+  border-color: #2e2444;
+  border-left-color: var(--purple-500);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+}
+[data-theme="dark"] .toast .toast-title { color: #ece4ff; }
+[data-theme="dark"] .toast .toast-sub   { color: #b8a8d8; }
+[data-theme="dark"] .toast .toast-body  { color: #d8cde8; }

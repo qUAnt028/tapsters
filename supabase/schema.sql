@@ -118,6 +118,16 @@ create table if not exists public.messages (
   created_at timestamptz not null default now()
 );
 
+-- Optional metadata so a single chat thread can mix plain text messages
+-- and order-notification cards. kind = 'text' (default) or 'order'.
+-- order_id is set on 'order' notifications so the recipient can drill
+-- into the full receipt. We use add-if-missing for these columns so the
+-- migration is safe to re-run on a project that already has the older
+-- two-column schema.
+alter table public.messages
+  add column if not exists kind     text not null default 'text',
+  add column if not exists order_id uuid references public.orders(id) on delete set null;
+
 create index if not exists messages_chat_idx on public.messages(chat_id, created_at);
 
 -- Bump the chat's last_message_at whenever a new message arrives so the
@@ -213,6 +223,7 @@ create policy "cart delete self" on public.cart_items for delete using (auth.uid
 drop policy if exists "chats read participant"   on public.chats;
 drop policy if exists "chats insert buyer"       on public.chats;
 drop policy if exists "chats update participant" on public.chats;
+drop policy if exists "chats delete participant" on public.chats;
 create policy "chats read participant" on public.chats for select using (
   auth.uid() = buyer_id or auth.uid() = seller_id
 );
@@ -222,6 +233,11 @@ create policy "chats insert buyer" on public.chats for insert with check (
   auth.uid() = buyer_id and auth.uid() <> seller_id
 );
 create policy "chats update participant" on public.chats for update using (
+  auth.uid() = buyer_id or auth.uid() = seller_id
+);
+-- Either participant can wipe the thread; cascades to its messages
+-- thanks to messages.chat_id's ON DELETE CASCADE FK.
+create policy "chats delete participant" on public.chats for delete using (
   auth.uid() = buyer_id or auth.uid() = seller_id
 );
 
