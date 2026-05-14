@@ -331,6 +331,20 @@
               </div>
             </div>
             <div id="auth-area" class="row" style="gap:6px"></div>
+            <button
+              type="button"
+              class="theme-toggle"
+              id="theme-toggle"
+              role="switch"
+              aria-checked="false"
+              aria-label="Switch to dark theme"
+              title="Switch to dark theme"
+            >
+              <span class="tt-thumb">
+                <span class="tt-icon tt-icon-sun" aria-hidden="true">☀</span>
+                <span class="tt-icon tt-icon-moon" aria-hidden="true">☾</span>
+              </span>
+            </button>
           </div>
         </div>
       </header>
@@ -347,9 +361,24 @@
     wireSearch();
     wireGlobalClose();
     wireAccountArea();
+    wireThemeToggle();
 
     document.addEventListener("tap:cartchange", refreshCartCount);
     refreshCartCount();
+  }
+
+  function wireThemeToggle() {
+    var btn = document.getElementById("theme-toggle");
+    if (!btn || !window.tapTheme) return;
+    // Sync aria/title to the current theme on first paint.
+    var t = window.tapTheme.current();
+    btn.setAttribute("aria-checked", t === "dark" ? "true" : "false");
+    btn.setAttribute("aria-label", t === "dark" ? "Switch to light theme" : "Switch to dark theme");
+    btn.title = t === "dark" ? "Switch to light theme" : "Switch to dark theme";
+    btn.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      window.tapTheme.toggle();
+    });
   }
 
   document.addEventListener("DOMContentLoaded", buildHeader);
