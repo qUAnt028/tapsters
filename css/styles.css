@@ -143,6 +143,34 @@
      page, but keep the colored text readable. */
   filter: brightness(.92);
 }
+/* The footer reads from --purple-900 / --purple-100; in dark mode both
+   palette entries are deep purples on top of a deeper purple background,
+   which collapses the contrast. Re-state with explicit colors. */
+[data-theme="dark"] .site-footer {
+  background: #15102a;
+  color: #c5b8e1;
+  border-top: 1px solid #2a1f48;
+}
+[data-theme="dark"] .site-footer a { color: #ddc0ff; }
+
+/* .muted text on dark surfaces was using --gray-500 = #a094b3 — readable,
+   but on dark gradient buttons / overlays it can blend. Override a few
+   spots that read against a deeply tinted background. */
+[data-theme="dark"] .cart-line .muted,
+[data-theme="dark"] .cart-totals,
+[data-theme="dark"] .menu-panel .muted {
+  color: #c5b8e1;
+}
+[data-theme="dark"] .cart-line {
+  border-bottom-color: #2e2444;
+}
+[data-theme="dark"] .cart-line .rm-btn {
+  color: #d3b4f5;
+  border-color: #4a3a66;
+}
+[data-theme="dark"] .cart-line .rm-btn:hover {
+  background: #2f2546;
+}
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
@@ -567,12 +595,32 @@ section.section h2 {
   background: var(--surface-2); overflow: hidden;
 }
 .cart-line .ct img { width: 100%; height: 100%; object-fit: cover; }
-.cart-line .qty { display: flex; align-items: center; gap: 4px; }
-.cart-line .qty button {
+.cart-line .qty { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+/* Tight square buttons for +/- only (selected by data-act). The "remove"
+   button needs the natural width of its label, so it gets its own rule
+   below. */
+.cart-line .qty button[data-act="inc"],
+.cart-line .qty button[data-act="dec"] {
   width: 24px; height: 24px; border-radius: 6px;
   border: 1px solid var(--border-strong);
   background: var(--surface); color: var(--purple-700);
+  padding: 0;
 }
+.cart-line .qty .rm-btn,
+.cart-line .qty button[data-act="rm"] {
+  margin-left: 6px;
+  padding: 3px 10px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--purple-700);
+  font-size: .85rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+.cart-line .qty .rm-btn:hover,
+.cart-line .qty button[data-act="rm"]:hover { background: var(--surface-2); }
 .cart-totals {
   display: flex; justify-content: space-between;
   padding: 10px 0 6px; font-weight: 700; color: var(--purple-800);
@@ -978,11 +1026,13 @@ section.section h2 {
   margin: 6px 0 2px;
 }
 .chat-msg {
-  /* Shrink-to-fit: a short message renders a tiny bubble; medium-length
-     messages keep growing until they hit the cap; only very long messages
-     get wrapped. The cap is the smaller of 85% of the stream and 520px
-     so a wide chat doesn't produce uncomfortably long lines. */
-  width: fit-content;
+  /* `display: table` is the classic CSS trick that makes a block-level
+     element actually shrink to its *wrapped* content width (not just its
+     unwrapped max-content width). That means a short message gets a
+     tiny bubble, medium messages get a bubble that hugs the text, and
+     only very long messages wrap — and even then the bubble is exactly
+     as wide as the widest wrapped line, with no trailing dead space. */
+  display: table;
   max-width: min(85%, 520px);
   padding: 9px 13px;
   border-radius: 14px;

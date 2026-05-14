@@ -364,6 +364,14 @@
     wireThemeToggle();
 
     document.addEventListener("tap:cartchange", refreshCartCount);
+    // Also re-paint the cart panel whenever the cart changes IF the
+    // dropdown is currently open. This fixes the bug where adding an
+    // item from a card-hover button popped open the panel but it was
+    // still showing the old (empty) state from before the add.
+    document.addEventListener("tap:cartchange", () => {
+      var cartMenu = document.getElementById("cart-menu");
+      if (cartMenu && cartMenu.classList.contains("open")) paintCartPanel();
+    });
     refreshCartCount();
   }
 
