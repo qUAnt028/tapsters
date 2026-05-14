@@ -91,6 +91,51 @@ create table if not exists public.cart_items (
   unique (user_id, item_id)
 );
 
+-- ----- chats (one thread per buyer<->seller<->item triple) -----
+create table if not exists public.chats (
+  id              uuid primary key default gen_random_uuid(),
+  item_id         uuid references public.items(id) on delete set null,
+  -- The title is denormalised so the chat list survives the item being
+  -- deleted (e.g. after a successful checkout). Saved at chat creation time.
+  item_title      text,
+  buyer_id        uuid not null references auth.users(id) on delete cascade,
+  seller_id       uuid not null references auth.users(id) on delete cascade,
+  created_at      timestamptz not null default now(),
+  last_message_at timestamptz not null default now(),
+  check (buyer_id <> seller_id),
+  unique (item_id, buyer_id)
+);
+
+create index if not exists chats_buyer_idx  on public.chats(buyer_id);
+create index if not exists chats_seller_idx on public.chats(seller_id);
+create index if not exists chats_last_idx   on public.chats(last_message_at desc);
+
+create table if not exists public.messages (
+  id         uuid primary key default gen_random_uuid(),
+  chat_id    uuid not null references public.chats(id) on delete cascade,
+  sender_id  uuid not null references auth.users(id) on delete cascade,
+  content    text not null check (length(content) > 0),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists messages_chat_idx on public.messages(chat_id, created_at);
+
+-- Bump the chat's last_message_at whenever a new message arrives so the
+-- cabinet "Messages" list can sort by most-recent activity cheaply.
+create or replace function public.handle_new_message() returns trigger as $$
+begin
+  update public.chats
+     set last_message_at = new.created_at
+   where id = new.chat_id;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_message_inserted on public.messages;
+create trigger on_message_inserted
+  after insert on public.messages
+  for each row execute procedure public.handle_new_message();
+
 -- ----- Row Level Security -----
 alter table public.profiles    enable row level security;
 alter table public.categories  enable row level security;
@@ -99,6 +144,8 @@ alter table public.reviews     enable row level security;
 alter table public.orders      enable row level security;
 alter table public.order_items enable row level security;
 alter table public.cart_items  enable row level security;
+alter table public.chats       enable row level security;
+alter table public.messages    enable row level security;
 
 -- profiles
 drop policy if exists "profiles read all"    on public.profiles;
@@ -161,6 +208,42 @@ create policy "cart read self"   on public.cart_items for select using (auth.uid
 create policy "cart insert self" on public.cart_items for insert with check (auth.uid() = user_id);
 create policy "cart update self" on public.cart_items for update using (auth.uid() = user_id);
 create policy "cart delete self" on public.cart_items for delete using (auth.uid() = user_id);
+
+-- chats (only the two participants can see / change the thread)
+drop policy if exists "chats read participant"   on public.chats;
+drop policy if exists "chats insert buyer"       on public.chats;
+drop policy if exists "chats update participant" on public.chats;
+create policy "chats read participant" on public.chats for select using (
+  auth.uid() = buyer_id or auth.uid() = seller_id
+);
+create policy "chats insert buyer" on public.chats for insert with check (
+  -- The viewer must be the buyer (you can't open a chat on behalf of
+  -- somebody else) and must NOT be the seller of the same item.
+  auth.uid() = buyer_id and auth.uid() <> seller_id
+);
+create policy "chats update participant" on public.chats for update using (
+  auth.uid() = buyer_id or auth.uid() = seller_id
+);
+
+-- messages (read/write only if the viewer is one of the two participants
+-- in the parent chat row)
+drop policy if exists "messages read participant"   on public.messages;
+drop policy if exists "messages insert participant" on public.messages;
+create policy "messages read participant" on public.messages for select using (
+  exists (
+    select 1 from public.chats c
+    where c.id = messages.chat_id
+      and (c.buyer_id = auth.uid() or c.seller_id = auth.uid())
+  )
+);
+create policy "messages insert participant" on public.messages for insert with check (
+  auth.uid() = sender_id
+  and exists (
+    select 1 from public.chats c
+    where c.id = messages.chat_id
+      and (c.buyer_id = auth.uid() or c.seller_id = auth.uid())
+  )
+);
 
 -- ----- Auto-create profile on user signup -----
 create or replace function public.handle_new_user() returns trigger as $$

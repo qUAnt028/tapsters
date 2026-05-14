@@ -137,6 +137,70 @@
     });
   }
 
+  function displayNameFromProfile(p) {
+    if (!p) return "Tapster";
+    return p.full_name || p.username || "Tapster";
+  }
+  function initialFor(name) {
+    return (String(name || "T")[0] || "T").toUpperCase();
+  }
+
+  async function loadMessages(userId) {
+    const t = window.tapsters;
+    const root = $("#messages-list");
+    root.innerHTML = '<div class="empty">Loading…</div>';
+
+    // RLS filters to chats where the current user is buyer OR seller, but
+    // we add an explicit .or() so the query is unambiguous to the planner.
+    const { data: chats, error } = await t.client
+      .from("chats")
+      .select("id, item_id, item_title, buyer_id, seller_id, created_at, last_message_at")
+      .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+      .order("last_message_at", { ascending: false });
+
+    if (error) {
+      root.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>';
+      return;
+    }
+    if (!chats || !chats.length) {
+      root.innerHTML = '<div class="empty">No messages yet. Open a product page and tap “Написати продавцю” to start a chat with a seller.</div>';
+      return;
+    }
+
+    // Fan-out: load the "other party" profile for each chat in one batch.
+    const otherIds = Array.from(new Set(
+      chats.map((c) => (c.buyer_id === userId ? c.seller_id : c.buyer_id))
+    ));
+    const profilesById = {};
+    if (otherIds.length) {
+      const { data: profiles } = await t.client
+        .from("profiles")
+        .select("id, username, full_name, avatar_url")
+        .in("id", otherIds);
+      (profiles || []).forEach((p) => { profilesById[p.id] = p; });
+    }
+
+    root.innerHTML = '<div class="chat-list">' + chats.map((c) => {
+      const otherId = c.buyer_id === userId ? c.seller_id : c.buyer_id;
+      const other = profilesById[otherId];
+      const name = displayNameFromProfile(other);
+      const about = c.item_title
+        ? "About: " + c.item_title
+        : "Direct message";
+      const when = new Date(c.last_message_at).toLocaleString();
+      return `
+        <a class="chat-row" href="chat.html?id=${encodeURIComponent(c.id)}">
+          <div class="chat-avatar">${escapeHtml(initialFor(name))}</div>
+          <div class="chat-body">
+            <div class="chat-who">${escapeHtml(name)}</div>
+            <div class="chat-about">${escapeHtml(about)}</div>
+          </div>
+          <div class="chat-meta">${escapeHtml(when)}</div>
+        </a>
+      `;
+    }).join("") + '</div>';
+  }
+
   async function loadAccount(user) {
     const t = window.tapsters;
     const { data: profile } = await t.client
@@ -191,10 +255,11 @@
     );
 
     const initial = (location.hash || "#orders").slice(1);
-    showTab(["orders", "listings", "account"].includes(initial) ? initial : "orders");
+    showTab(["orders", "listings", "messages", "account"].includes(initial) ? initial : "orders");
 
     await loadOrders(user.id);
     await loadMyListings(user.id);
+    await loadMessages(user.id);
     await loadAccount(user);
   });
 })();

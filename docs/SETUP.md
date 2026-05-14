@@ -90,6 +90,25 @@ table, re-running `supabase/schema.sql` will drop it and create the new
 > [`supabase/schema.sql`](../supabase/schema.sql); the page should work
 > immediately after.
 
+## Chats (direct messages)
+
+Buyers can message sellers from a product page, and both sides can pick the
+conversation back up from **Cabinet → Messages**.
+
+- The schema adds two tables — `public.chats` (one row per buyer ↔ seller ↔
+  item triple) and `public.messages` (one row per message). Row Level
+  Security ensures only the two participants can read or write their thread.
+- The `chats.item_title` column is denormalised on creation so the cabinet
+  message list still renders correctly even after the seller deletes the
+  underlying item.
+- A trigger keeps `chats.last_message_at` in sync with new messages so the
+  conversation list can be sorted by recency.
+
+> **Migration tip — _"Could not find the table 'public.chats' in the schema cache"_**
+> If you see this error when clicking *Написати продавцю*, re-run
+> [`supabase/schema.sql`](../supabase/schema.sql) in the Supabase SQL Editor.
+> The script is idempotent and only creates the chat tables on first run.
+
 JavaScript modules live under `js/` and are intentionally framework-free so
 they're easy to read and tweak.
 

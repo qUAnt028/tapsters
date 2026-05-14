@@ -126,14 +126,18 @@
       $("#item-price").textContent = window.tapCurrency.formatItem(item.price, item.currency);
     });
 
-    // Show delete button only to the seller
+    // Show delete button only to the seller; hide chat-with-seller when
+    // viewing your own item (you can't chat with yourself).
     const t = window.tapsters;
     const me = t && t.isConfigured ? await t.getUser() : null;
-    if (me && me.id === item.seller_id) {
+    const isSeller = !!(me && me.id === item.seller_id);
+
+    if (isSeller) {
       const delBtn = $("#delete-btn");
       delBtn.classList.remove("hidden");
       $("#add-cart-btn").classList.add("hidden");
       $("#buy-now-btn").classList.add("hidden");
+      $("#chat-seller-btn").classList.add("hidden");
 
       delBtn.addEventListener("click", async () => {
         if (!confirm("Delete this listing? This can't be undone.")) return;
@@ -146,6 +150,54 @@
         } catch (e) {
           alert(e.message || "Could not delete listing.");
           delBtn.disabled = false;
+        }
+      });
+    }
+
+    // Chat-with-seller button. Creates the (item, buyer) chat row if it
+    // doesn't already exist, then sends the user to chat.html.
+    const chatBtn = $("#chat-seller-btn");
+    if (chatBtn && !isSeller) {
+      chatBtn.addEventListener("click", async () => {
+        if (!me) {
+          location.href = `auth.html?next=${encodeURIComponent("item.html?id=" + id)}`;
+          return;
+        }
+        chatBtn.disabled = true;
+        const prevLabel = chatBtn.textContent;
+        chatBtn.textContent = "Opening chat…";
+        try {
+          // Does a chat already exist for (this item, this buyer)?
+          const { data: existing, error: selErr } = await t.client
+            .from("chats")
+            .select("id")
+            .eq("item_id", item.id)
+            .eq("buyer_id", me.id)
+            .maybeSingle();
+          if (selErr) throw selErr;
+
+          let chatId = existing && existing.id;
+          if (!chatId) {
+            const { data: inserted, error: insErr } = await t.client
+              .from("chats")
+              .insert({
+                item_id:    item.id,
+                item_title: item.title,
+                buyer_id:   me.id,
+                seller_id:  item.seller_id,
+              })
+              .select("id")
+              .single();
+            if (insErr) throw insErr;
+            chatId = inserted.id;
+          }
+          location.href = "chat.html?id=" + encodeURIComponent(chatId);
+        } catch (e) {
+          const errBox = $("#add-error");
+          errBox.textContent = e.message || "Could not open chat with this seller.";
+          errBox.classList.remove("hidden");
+          chatBtn.textContent = prevLabel;
+          chatBtn.disabled = false;
         }
       });
     }
