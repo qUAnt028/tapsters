@@ -978,11 +978,17 @@ section.section h2 {
   margin: 6px 0 2px;
 }
 .chat-msg {
-  max-width: 70%;
+  /* Shrink-to-fit: a short message renders a tiny bubble; medium-length
+     messages keep growing until they hit the cap; only very long messages
+     get wrapped. The cap is the smaller of 85% of the stream and 520px
+     so a wide chat doesn't produce uncomfortably long lines. */
+  width: fit-content;
+  max-width: min(85%, 520px);
   padding: 9px 13px;
   border-radius: 14px;
   font-size: .95rem;
   word-wrap: break-word;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
   position: relative;
   line-height: 1.35;
