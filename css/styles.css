@@ -85,6 +85,65 @@
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, .60);
 }
 
+/* ----- Dark-mode component overrides ------------------------------
+   The light palette uses var(--purple-700) for "rich purple text on a
+   white surface". In dark mode the surface is dark, so we need a much
+   lighter purple to keep the text readable. The brand purple on the
+   header / primary button stays slightly-darker (as requested); these
+   overrides only affect text-on-surface uses. */
+[data-theme="dark"] .price,
+[data-theme="dark"] .btn.secondary,
+[data-theme="dark"] .chip,
+[data-theme="dark"] .tabs .tab,
+[data-theme="dark"] .cart-line .qty button,
+[data-theme="dark"] .option-card,
+[data-theme="dark"] .cur-pick label,
+[data-theme="dark"] .icon-btn .badge,
+[data-theme="dark"] .form-card h1 {
+  color: #cba6f5;
+}
+[data-theme="dark"] section.section h2,
+[data-theme="dark"] .menu-panel h4,
+[data-theme="dark"] .comment .who strong,
+[data-theme="dark"] .seller-card a,
+[data-theme="dark"] .order-row a,
+[data-theme="dark"] .item-info h1 {
+  color: #ddc0ff;
+}
+[data-theme="dark"] .menu-panel li:hover {
+  /* Light purple-50 in light mode = #faf5ff; we need a HIGHER-luminance
+     hover than the menu-panel's --surface (#251c38) in dark mode. */
+  background: #2f2546;
+}
+[data-theme="dark"] .btn.secondary:hover { background: #2f2546; }
+[data-theme="dark"] .chip:hover { background: #2f2546; }
+[data-theme="dark"] .option-card.active { background: #322848; border-color: #8a5cd9; }
+[data-theme="dark"] .cur-pick input:checked + span,
+[data-theme="dark"] .tabs .tab.active,
+[data-theme="dark"] .chip.active {
+  /* Already white on purple-600 in the base CSS — re-state the white text
+     so it overrides our text-color overrides above on the .tab/.chip. */
+  color: var(--white);
+  background: var(--purple-600);
+}
+/* The form-card border on inputs uses --purple-100 for the focus ring
+   shadow. In dark mode that resolves to a dark navy that's invisible — */
+[data-theme="dark"] .form-row input:focus,
+[data-theme="dark"] .form-row textarea:focus,
+[data-theme="dark"] .form-row select:focus {
+  box-shadow: 0 0 0 3px rgba(168, 124, 240, .25);
+}
+/* The success / error / notice components have light pastel backgrounds
+   baked in. Keep the text dark on those because the bg is still light. */
+[data-theme="dark"] .error,
+[data-theme="dark"] .success,
+[data-theme="dark"] .notice,
+[data-theme="dark"] .config-banner {
+  /* Slightly dim the pastel background so it doesn't shout on a dark
+     page, but keep the colored text readable. */
+  filter: brightness(.92);
+}
+
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 html {
