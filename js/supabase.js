@@ -33,8 +33,8 @@
     div.id = "tap-config-banner";
     div.className = "config-banner";
     div.innerHTML =
-      'Tapsters is not connected to Supabase yet. Edit <code>js/config.js</code> with your project URL and anon key. ' +
-      'See <a href="docs/SETUP.md">docs/SETUP.md</a>.';
+      'Tapsters ще не підключено до Supabase. Відредагуйте <code>js/config.js</code>, вказавши URL проєкту та anon ключ. ' +
+      'Дивіться <a href="docs/SETUP.md">docs/SETUP.md</a>.';
     document.body.prepend(div);
   }
 
@@ -71,19 +71,19 @@
     if (!err) return "";
     const msg = (err.message || "").toLowerCase();
     if (msg.includes("invalid login") || msg.includes("invalid credentials")) {
-      return "Invalid email or password. The account may not exist.";
+      return "Неправильний email або пароль. Можливо, акаунту не існує.";
     }
     if (msg.includes("email not confirmed")) {
-      return "Please confirm your email address before logging in.";
+      return "Будь ласка, підтвердіть вашу email-адресу перед входом.";
     }
     if (msg.includes("user already registered")) {
-      return "An account with this email already exists. Try logging in instead.";
+      return "Акаунт з таким email вже існує. Спробуйте увійти.";
     }
-    return err.message || "Something went wrong.";
+    return err.message || "Щось пішло не так.";
   }
 
   async function signUp({ email, password, username, full_name }) {
-    if (!client) throw new Error("Supabase is not configured.");
+    if (!client) throw new Error("Supabase не налаштовано.");
     const { data, error } = await client.auth.signUp({
       email,
       password,
@@ -94,7 +94,7 @@
   }
 
   async function signIn({ email, password }) {
-    if (!client) throw new Error("Supabase is not configured.");
+    if (!client) throw new Error("Supabase не налаштовано.");
     // Supabase already returns "Invalid login credentials" for a missing user,
     // which is exactly what we want — the requirement is that you cannot log
     // into a non-existent account, and the error is indistinguishable from a

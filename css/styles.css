@@ -165,11 +165,23 @@
   border-bottom-color: #2e2444;
 }
 [data-theme="dark"] .cart-line .rm-btn {
-  color: #d3b4f5;
-  border-color: #4a3a66;
+  color: #e3c8ff;
+  border-color: #6a548a;
+  background: #2a2240;
 }
 [data-theme="dark"] .cart-line .rm-btn:hover {
-  background: #2f2546;
+  background: #3a2f55;
+  border-color: #8a6fb0;
+}
+/* Ensure the cart-totals / cart-actions labels remain readable on the
+   dark cart-panel surface. The base CSS sets these to --purple-700 /
+   --purple-800 which collapse against the dark surface. */
+[data-theme="dark"] .cart-totals {
+  color: #ddc0ff;
+}
+[data-theme="dark"] .empty,
+[data-theme="dark"] .menu-panel .empty {
+  color: #c5b8e1;
 }
 
 * { box-sizing: border-box; }
@@ -1026,13 +1038,13 @@ section.section h2 {
   margin: 6px 0 2px;
 }
 .chat-msg {
-  /* `display: table` is the classic CSS trick that makes a block-level
-     element actually shrink to its *wrapped* content width (not just its
-     unwrapped max-content width). That means a short message gets a
-     tiny bubble, medium messages get a bubble that hugs the text, and
-     only very long messages wrap — and even then the bubble is exactly
-     as wide as the widest wrapped line, with no trailing dead space. */
-  display: table;
+  /* The bubble should hug the wrapped content width so short messages
+     don't take a full-width row and very long messages wrap at the
+     configured max-width. `width: fit-content` is the modern, flex-
+     friendly way to get this behaviour (display: table caused the
+     bubble to stretch to the parent in some layouts). */
+  display: block;
+  width: fit-content;
   max-width: min(85%, 520px);
   padding: 9px 13px;
   border-radius: 14px;

@@ -9,8 +9,8 @@
   }
 
   function sellerDisplayName(p) {
-    if (!p) return "Tapster";
-    return p.full_name || p.username || "Tapster";
+    if (!p) return "Користувач";
+    return p.full_name || p.username || "Користувач";
   }
 
   function buildStars(value, { interactive = false, onPick } = {}) {
@@ -131,10 +131,10 @@
 
   function reviewItemHtml(r) {
     const reviewerName =
-      (r.profiles && (r.profiles.full_name || r.profiles.username)) || "Tapster";
+      (r.profiles && (r.profiles.full_name || r.profiles.username)) || "Користувач";
     const ratingHtml = r.rating
       ? `<div class="stars" data-readonly="true">${"★".repeat(r.rating)}<span style="color:var(--gray-300)">${"★".repeat(5 - r.rating)}</span></div>`
-      : `<div class="muted" style="font-size:.8rem">No star rating</div>`;
+      : `<div class="muted" style="font-size:.8rem">Без оцінки</div>`;
     return `
       <div class="comment" data-review-id="${escapeHtml(r.id || "")}">
         <div class="who">
@@ -150,7 +150,7 @@
   function renderReviewsList(list) {
     const root = $("#reviews-list");
     if (!list || !list.length) {
-      root.innerHTML = '<div class="empty">No reviews yet for this seller.</div>';
+      root.innerHTML = '<div class="empty">Поки немає відгуків про цього продавця.</div>';
     } else {
       root.innerHTML = list.map(reviewItemHtml).join("");
     }
@@ -161,15 +161,15 @@
       const avg = rated.reduce((s, r) => s + r.rating, 0) / rated.length;
       paintStars(stars, avg);
       const r = Math.round(avg * 10) / 10;
-      txt.textContent = `${r.toFixed(1)} · ${rated.length} review${rated.length === 1 ? "" : "s"}`;
+      txt.textContent = `${r.toFixed(1)} · ${rated.length} відгук${rated.length === 1 ? "" : "ів"}`;
     } else if (list && list.length) {
       // Reviews exist but none carry a rating — say so explicitly instead
       // of "No reviews yet", which used to be misleading.
       stars.innerHTML = "";
-      txt.textContent = `${list.length} review${list.length === 1 ? "" : "s"} · no rating yet`;
+      txt.textContent = `${list.length} відгук${list.length === 1 ? "" : "ів"} · без оцінки`;
     } else {
       stars.innerHTML = "";
-      txt.textContent = "No reviews yet";
+      txt.textContent = "Поки немає відгуків";
     }
   }
 
@@ -236,7 +236,7 @@
       const refilled = buildStars(chosenRating, { interactive: true, onPick: (v) => { chosenRating = v; } });
       refilled.id = "rating-input";
       document.getElementById("rating-input").replaceWith(refilled);
-      $("#review-submit").textContent = "Update review";
+      $("#review-submit").textContent = "Оновити відгук";
     }
 
     form.addEventListener("submit", async (ev) => {
@@ -246,13 +246,13 @@
       const content = $("#review-content").value.trim();
       if (!content) {
         const e = $("#review-error");
-        e.textContent = "Please write a short review.";
+        e.textContent = "Будь ласка, напишіть короткий відгук.";
         e.classList.remove("hidden");
         return;
       }
       submitBtn.disabled = true;
       const originalLabel = submitBtn.textContent;
-      submitBtn.textContent = "Posting…";
+      submitBtn.textContent = "Публікуємо…";
       try {
         const payload = {
           subject_id,
@@ -287,8 +287,8 @@
         // Best-effort refetch to reconcile with anything else that changed.
         paintReviews(subject_id).catch((err) => console.error("refetch reviews:", err));
 
-        submitBtn.textContent = "Update review";
-        flashSuccess(existing ? "Review updated." : "Review posted.");
+        submitBtn.textContent = "Оновити відгук";
+        flashSuccess(existing ? "Відгук оновлено." : "Відгук опубліковано.");
       } catch (e) {
         submitBtn.textContent = originalLabel;
         const er = $("#review-error");
@@ -297,10 +297,10 @@
         // doesn't exist in the project yet (e.g. schema.sql wasn't re-run
         // after the comments → reviews refactor).
         if (/public\.reviews/i.test(msg) || /schema cache/i.test(msg)) {
-          er.innerHTML = 'Reviews table is missing on your Supabase project. ' +
-            'Re-run <code>supabase/schema.sql</code> in the SQL editor and reload this page.';
+          er.innerHTML = 'Таблиця reviews відсутня у вашому проєкті Supabase. ' +
+            'Повторно виконайте <code>supabase/schema.sql</code> в SQL-редакторі і оновіть сторінку.';
         } else {
-          er.textContent = msg || "Could not post review.";
+          er.textContent = msg || "Не вдалося опублікувати відгук.";
         }
         er.classList.remove("hidden");
       } finally {
@@ -327,10 +327,10 @@
 
     const name = sellerDisplayName(profile);
     $("#seller-name").textContent = name;
-    $("#hero-avatar").textContent = (name[0] || "T").toUpperCase();
+    $("#hero-avatar").textContent = (name[0] || "К").toUpperCase();
     $("#seller-username").textContent = profile.username ? "@" + profile.username : "";
     if (profile.created_at) {
-      $("#seller-joined").textContent = "Joined " + new Date(profile.created_at).toLocaleDateString();
+      $("#seller-joined").textContent = "Дата реєстрації: " + new Date(profile.created_at).toLocaleDateString();
     }
     document.title = `${name} — Tapsters`;
 

@@ -3,22 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chat — Tapsters</title>
+  <title>Чат — Tapsters</title>
   <script>(function(){try{var t=localStorage.getItem("tap.theme");if(!t&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
-  <link rel="stylesheet" href="css/styles.css?v=20260508h" />
+  <link rel="stylesheet" href="css/styles.css?v=20260601a" />
 </head>
 <body>
   <div id="site-header"></div>
 
   <main class="container">
     <div id="auth-gate" class="form-card hidden">
-      <h1>Please log in</h1>
-      <p>Direct messages are only available to registered users.</p>
-      <a class="btn" href="auth.html?next=chat.html">Log in</a>
-      <a class="btn secondary" href="auth.html?next=chat.html#register">Sign up</a>
+      <h1>Будь ласка увійдіть в акаунт.</h1>
+      <p>Особисті повідомлення доступні лише зареєстрованим користувачам.</p>
+      <a class="btn" href="auth.html?next=chat.html">Вхід</a>
+      <a class="btn secondary" href="auth.html?next=chat.html#register">Реєстрація</a>
     </div>
 
-    <div id="not-found" class="empty hidden mt-24">Chat not found or you don't have access.</div>
+    <div id="not-found" class="empty hidden mt-24">Чат не знайдено або у вас немає доступу.</div>
 
     <section id="chat-root" class="chat-view hidden">
       <header class="chat-head">
@@ -28,33 +28,33 @@
           <div class="muted" id="chat-about">…</div>
         </div>
         <div class="chat-actions">
-          <a class="btn secondary small" id="chat-item-link" href="#">View item</a>
-          <button class="btn danger small" id="chat-delete-btn" type="button">Delete chat</button>
+          <a class="btn secondary small" id="chat-item-link" href="#">Переглянути товар</a>
+          <button class="btn danger small" id="chat-delete-btn" type="button">Видалити чат</button>
         </div>
       </header>
 
       <div id="chat-stream" class="chat-stream">
-        <div class="chat-empty" id="chat-empty">No messages yet — say hello!</div>
+        <div class="chat-empty" id="chat-empty">Поки немає повідомлень — привітайтесь!</div>
       </div>
 
       <form class="chat-composer" id="chat-form">
-        <textarea id="chat-input" placeholder="Type a message…" rows="1" maxlength="2000"></textarea>
-        <button class="btn" type="submit" id="chat-send">Send</button>
+        <textarea id="chat-input" placeholder="Напишіть повідомлення…" rows="1" maxlength="2000"></textarea>
+        <button class="btn" type="submit" id="chat-send">Надіслати</button>
       </form>
     </section>
   </main>
 
-  <footer class="site-footer"><div class="container">© Tapsters</div></footer>
+  <footer class="site-footer"><div class="container">© Tapsters Original</div></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/theme.js?v=20260508h"></script>
-  <script src="js/config.js?v=20260508h"></script>
-  <script src="js/supabase.js?v=20260508h"></script>
-  <script src="js/currency.js?v=20260508h"></script>
-  <script src="js/recently.js?v=20260508h"></script>
-  <script src="js/cart.js?v=20260508h"></script>
-  <script src="js/header.js?v=20260508h"></script>
-  <script src="js/notifications.js?v=20260508h"></script>
-  <script src="js/chat.js?v=20260508h"></script>
+  <script src="js/theme.js?v=20260601a"></script>
+  <script src="js/config.js?v=20260601a"></script>
+  <script src="js/supabase.js?v=20260601a"></script>
+  <script src="js/currency.js?v=20260601a"></script>
+  <script src="js/recently.js?v=20260601a"></script>
+  <script src="js/cart.js?v=20260601a"></script>
+  <script src="js/header.js?v=20260601a"></script>
+  <script src="js/notifications.js?v=20260601a"></script>
+  <script src="js/chat.js?v=20260601a"></script>
 </body>
 </html>

@@ -23,7 +23,7 @@
     const root = $("#cart-summary");
     const display = window.tapCurrency.getDisplay();
     if (!cartItems.length) {
-      root.innerHTML = '<div class="empty">Your cart is empty.</div>';
+      root.innerHTML = '<div class="empty">Ваш кошик порожній.</div>';
       $("#grand-total").textContent = "—";
       return;
     }
@@ -91,12 +91,12 @@
       const name = $("#card-name").value.trim();
       const exp = $("#card-expiry").value.trim();
       const cvv = $("#card-cvv").value.trim();
-      if (number.length < 13 || number.length > 19) return "Enter a valid card number.";
-      if (!name) return "Enter the cardholder name.";
-      if (!/^\d{2}\/\d{2}$/.test(exp)) return "Enter expiry as MM/YY.";
-      if (!/^\d{3,4}$/.test(cvv)) return "Enter a valid CVV.";
+      if (number.length < 13 || number.length > 19) return "Введіть коректний номер картки.";
+      if (!name) return "Введіть імʼя власника картки.";
+      if (!/^\d{2}\/\d{2}$/.test(exp)) return "Введіть термін дії як ММ/РР.";
+      if (!/^\d{3,4}$/.test(cvv)) return "Введіть коректний CVV.";
     }
-    if (!cartItems.length) return "Cart is empty.";
+    if (!cartItems.length) return "Кошик порожній.";
     return null;
   }
 
@@ -110,7 +110,7 @@
     if (!t || !t.isConfigured || !currentUser) return;
 
     // Pull the buyer's display name once so each notification renders it.
-    let buyerName = "Buyer";
+    let buyerName = "Покупець";
     try {
       const { data: prof } = await t.client
         .from("profiles")
@@ -203,13 +203,13 @@
             chat_id: chatId,
             sender_id: currentUser.id,
             content:
-              "🛒 New order from " + buyerName +
+              "🛒 Нове замовлення від " + buyerName +
               " — " + it.quantity + "× " + it.title +
-              " for " + window.tapCurrency.format(it.price * it.quantity, it.currency) +
-              ". Delivery: " + (ctx.delivery || "—") +
+              " за " + window.tapCurrency.format(it.price * it.quantity, it.currency) +
+              ". Доставка: " + (ctx.delivery || "—") +
               (ctx.branch ? ", " + ctx.branch : "") +
               (ctx.address ? ", " + ctx.address : "") +
-              ". Payment: " + (ctx.payment === "prepay" ? "Prepayment" : "Cash on delivery") + ".",
+              ". Оплата: " + (ctx.payment === "prepay" ? "Передоплата" : "Наложений платіж") + ".",
           });
         } catch (_) { /* give up silently */ }
       }
@@ -259,7 +259,7 @@
       const address = $("#address").value.trim();
 
       if (!branch && !address) {
-        showError("Please enter a branch or delivery address.");
+        showError("Введіть відділення або адресу доставки.");
         return;
       }
 
@@ -358,9 +358,9 @@
 
         $("#checkout-grid").classList.add("hidden");
         $("#success-card").classList.remove("hidden");
-        $("#success-msg").textContent = `Order #${order.id.slice(0, 8)} placed. Status: ${payment === "prepay" ? "paid" : "pending"}.`;
+        $("#success-msg").textContent = `Замовлення #${order.id.slice(0, 8)} оформлено. Статус: ${payment === "prepay" ? "оплачено" : "очікує"}.`;
       } catch (e) {
-        showError(e.message || "Could not place order.");
+        showError(e.message || "Не вдалося оформити замовлення.");
         submit.disabled = false;
       }
     });

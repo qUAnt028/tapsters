@@ -53,7 +53,7 @@
       cats = data || [];
     }
     if (!cats.length) {
-      sel.innerHTML = '<option value="">— configure Supabase —</option>';
+      sel.innerHTML = '<option value="">— налаштуйте Supabase —</option>';
       return;
     }
     sel.innerHTML = cats
@@ -90,15 +90,15 @@
       const image_url = normalizeImageUrl($("#image_url").value);
 
       if (!title || isNaN(price) || price < 0) {
-        showError("Please fill in title and a valid price.");
+        showError("Будь ласка, вкажіть назву та коректну ціну.");
         return;
       }
       if (!category_id) {
-        showError("Please pick a category.");
+        showError("Будь ласка, оберіть категорію.");
         return;
       }
       if (image_url === false) {
-        showError("That image URL doesn't look right. Paste a direct link like https://example.com/photo.jpg.");
+        showError("Це посилання на фото виглядає неправильно. Вставте пряме посилання наприклад https://example.com/photo.jpg.");
         return;
       }
 
@@ -129,10 +129,10 @@
 
         if (error) throw error;
 
-        showSuccess("Listing published! Redirecting…");
+        showSuccess("Оголошення опубліковано! Перенаправляємо…");
         setTimeout(() => (location.href = `item.html?id=${data.id}`), 700);
       } catch (err) {
-        showError(err.message || "Could not publish listing.");
+        showError(err.message || "Не вдалося опублікувати оголошення.");
       } finally {
         submit.disabled = false;
       }

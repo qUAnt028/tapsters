@@ -27,8 +27,8 @@
     var btn = document.querySelector(".theme-toggle");
     if (btn) {
       btn.setAttribute("aria-checked", t === "dark" ? "true" : "false");
-      btn.setAttribute("aria-label", t === "dark" ? "Switch to light theme" : "Switch to dark theme");
-      btn.title = t === "dark" ? "Switch to light theme" : "Switch to dark theme";
+      btn.setAttribute("aria-label", t === "dark" ? "Перемкнути на світлу тему" : "Перемкнути на темну тему");
+      btn.title = t === "dark" ? "Перемкнути на світлу тему" : "Перемкнути на темну тему";
     }
     document.dispatchEvent(new CustomEvent("tap:themechange", { detail: { theme: t } }));
   }

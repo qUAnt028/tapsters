@@ -50,16 +50,22 @@
       return;
     }
     if (item.seller_id && item.seller_id === u.id) {
-      alert("You can't add your own listing to your cart.");
+      alert("Ви не можете додати власне оголошення до кошика.");
       return;
     }
     try {
       await window.tapCart.add(item, 1);
-      const cartMenu = document.getElementById("cart-menu");
-      if (cartMenu) cartMenu.classList.add("open");
-      document.dispatchEvent(new CustomEvent("tap:cartchange"));
+      // Paint the dropdown contents first, THEN open it. Opening the
+      // panel before paint finishes briefly shows the "Your cart is
+      // empty" placeholder which used to look like a bug.
+      if (window.tapHeader && typeof window.tapHeader.openCart === "function") {
+        await window.tapHeader.openCart();
+      } else {
+        const cartMenu = document.getElementById("cart-menu");
+        if (cartMenu) cartMenu.classList.add("open");
+      }
     } catch (e) {
-      alert(e.message || "Could not add to cart.");
+      alert(e.message || "Не вдалося додати у кошик.");
     }
   }
 
@@ -73,7 +79,7 @@
       return;
     }
     if (item.seller_id && item.seller_id === u.id) {
-      alert("You can't buy your own listing.");
+      alert("Ви не можете купити власне оголошення.");
       return;
     }
     try { await window.tapCart.add(item, 1); } catch (e) { /* may already be in cart */ }
@@ -107,20 +113,20 @@
     }
     if (!cats.length) {
       cats = [
-        { name: "Electronics", slug: "electronics" },
-        { name: "Fashion", slug: "fashion" },
-        { name: "Home & Garden", slug: "home-garden" },
-        { name: "Toys & Hobbies", slug: "toys" },
-        { name: "Sports", slug: "sports" },
-        { name: "Books & Media", slug: "books" },
-        { name: "Automotive", slug: "automotive" },
-        { name: "Collectibles", slug: "collectibles" },
-        { name: "Beauty", slug: "beauty" },
-        { name: "Other", slug: "other" },
+        { name: "Електроніка", slug: "electronics" },
+        { name: "Мода", slug: "fashion" },
+        { name: "Дім і сад", slug: "home-garden" },
+        { name: "Іграшки та хобі", slug: "toys" },
+        { name: "Спорт", slug: "sports" },
+        { name: "Книги та медіа", slug: "books" },
+        { name: "Авто", slug: "automotive" },
+        { name: "Колекції", slug: "collectibles" },
+        { name: "Краса", slug: "beauty" },
+        { name: "Інше", slug: "other" },
       ];
     }
     chips.innerHTML =
-      `<a class="chip ${!active ? "active" : ""}" href="index.html">All</a>` +
+      `<a class="chip ${!active ? "active" : ""}" href="index.html">Всі</a>` +
       cats
         .map(
           (c) =>
@@ -205,9 +211,9 @@
     const q = (params.get("q") || "").trim();
     const category = params.get("category") || "";
     if (q) {
-      $("#page-title").textContent = `Search results for “${q}”`;
+      $("#page-title").textContent = `Результати пошуку: «${q}»`;
     } else if (category) {
-      $("#page-title").textContent = `Category: ${category.replace(/-/g, " ")}`;
+      $("#page-title").textContent = `Категорія: ${category.replace(/-/g, " ")}`;
     }
 
     $("#hero-cta").addEventListener("click", async () => {

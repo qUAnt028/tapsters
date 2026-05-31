@@ -59,13 +59,13 @@
   }
 
   function sellerDisplayName(profile) {
-    if (!profile) return "Tapster";
-    return profile.full_name || profile.username || "Tapster";
+    if (!profile) return "Користувач";
+    return profile.full_name || profile.username || "Користувач";
   }
 
   function sellerInitial(profile) {
     const name = sellerDisplayName(profile);
-    return (name[0] || "T").toUpperCase();
+    return (name[0] || "К").toUpperCase();
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -107,15 +107,15 @@
     if (rating.count) {
       paintStars($("#seller-stars"), rating.avg);
       const r = Math.round(rating.avg * 10) / 10;
-      $("#seller-rating-text").textContent = `${r.toFixed(1)} · ${rating.count} review${rating.count === 1 ? "" : "s"}`;
+      $("#seller-rating-text").textContent = `${r.toFixed(1)} · ${rating.count} відгук${rating.count === 1 ? "" : "ів"}`;
     } else if (rating.total) {
       // There are reviews about the seller, just none of them carry a star
       // rating yet — surface that instead of falsely saying "No reviews yet".
       $("#seller-stars").innerHTML = "";
-      $("#seller-rating-text").textContent = `${rating.total} review${rating.total === 1 ? "" : "s"} · no rating yet`;
+      $("#seller-rating-text").textContent = `${rating.total} відгук${rating.total === 1 ? "" : "ів"} · без оцінки`;
     } else {
       $("#seller-stars").innerHTML = "";
-      $("#seller-rating-text").textContent = "No reviews yet";
+      $("#seller-rating-text").textContent = "Поки немає відгуків";
     }
 
     // Record recently viewed
@@ -140,15 +140,15 @@
       $("#chat-seller-btn").classList.add("hidden");
 
       delBtn.addEventListener("click", async () => {
-        if (!confirm("Delete this listing? This can't be undone.")) return;
+        if (!confirm("Видалити це оголошення? Це неможливо буде відмінити.")) return;
         delBtn.disabled = true;
         try {
           const { error } = await t.client.from("items").delete().eq("id", item.id);
           if (error) throw error;
-          alert("Listing deleted.");
+          alert("Оголошення видалено.");
           location.href = "cabinet.html#listings";
         } catch (e) {
-          alert(e.message || "Could not delete listing.");
+          alert(e.message || "Не вдалося видалити оголошення.");
           delBtn.disabled = false;
         }
       });
@@ -165,7 +165,7 @@
         }
         chatBtn.disabled = true;
         const prevLabel = chatBtn.textContent;
-        chatBtn.textContent = "Opening chat…";
+        chatBtn.textContent = "Відкриваємо чат…";
         try {
           // Does a chat already exist for (this item, this buyer)?
           const { data: existing, error: selErr } = await t.client
@@ -194,7 +194,7 @@
           location.href = "chat.html?id=" + encodeURIComponent(chatId);
         } catch (e) {
           const errBox = $("#add-error");
-          errBox.textContent = e.message || "Could not open chat with this seller.";
+          errBox.textContent = e.message || "Не вдалося відкрити чат з цим продавцем.";
           errBox.classList.remove("hidden");
           chatBtn.textContent = prevLabel;
           chatBtn.disabled = false;
@@ -206,7 +206,7 @@
     $("#add-cart-btn").addEventListener("click", async () => {
       const u = t && t.isConfigured ? await t.getUser() : null;
       if (!u) {
-        alert("Please log in or sign up to add items to your cart.");
+        alert("Будь ласка, увійдіть або зареєструйтеся, щоб додавати товари в кошик.");
         location.href = `auth.html?next=${encodeURIComponent("item.html?id=" + id)}`;
         return;
       }
@@ -214,7 +214,7 @@
         await window.tapCart.add(item, 1);
       } catch (e) {
         const err = $("#add-error");
-        err.textContent = e.message || "Could not add to cart.";
+        err.textContent = e.message || "Не вдалося додати у кошик.";
         err.classList.remove("hidden");
         return;
       }

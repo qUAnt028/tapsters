@@ -12,12 +12,12 @@
     document.querySelectorAll(".register-only").forEach((el) =>
       el.classList.toggle("hidden", mode !== "register")
     );
-    $("#form-title").textContent = mode === "register" ? "Create your account" : "Log in to Tapsters";
+    $("#form-title").textContent = mode === "register" ? "Створити акаунт" : "Увійти в Tapsters";
     $("#form-sub").textContent =
       mode === "register"
-        ? "Join in seconds and start buying or selling."
-        : "Welcome back. Enter your credentials.";
-    $("#submit-btn").textContent = mode === "register" ? "Sign up" : "Log in";
+        ? "Приєднайтесь за кілька секунд і почніть купувати або продавати."
+        : "З поверненням. Введіть свої дані.";
+    $("#submit-btn").textContent = mode === "register" ? "Зареєструватися" : "Увійти";
     document.getElementById("password").setAttribute("autocomplete", mode === "register" ? "new-password" : "current-password");
     clearMessages();
   }
@@ -53,7 +53,7 @@
 
       const t = window.tapsters;
       if (!t || !t.isConfigured) {
-        showError("Supabase isn't configured yet — see docs/SETUP.md.");
+        showError("Supabase ще не налаштовано — дивіться docs/SETUP.md.");
         return;
       }
 
@@ -62,9 +62,9 @@
       const username = $("#username").value.trim();
       const full_name = $("#full_name").value.trim();
 
-      if (!email || !password) { showError("Email and password are required."); return; }
+      if (!email || !password) { showError("Email і пароль обов'язкові."); return; }
       if (mode === "register" && password.length < 6) {
-        showError("Password must be at least 6 characters.");
+        showError("Пароль повинен містити не менше 6 символів.");
         return;
       }
 
@@ -79,7 +79,7 @@
             await window.tapCart.mergeGuestCart();
             redirectAfterAuth();
           } else {
-            showSuccess("Account created. Check your email to confirm before logging in.");
+            showSuccess("Акаунт створено. Перевірте email для підтвердження перед входом.");
             setMode("login");
           }
         } else {

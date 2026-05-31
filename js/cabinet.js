@@ -8,13 +8,13 @@
 
   function deliveryLabel(m) {
     return ({
-      nova_poshta: "Nova Poshta",
-      ukrposhta:   "Ukrposhta",
+      nova_poshta: "Нова Пошта",
+      ukrposhta:   "УкрПошта",
       meest:       "Meest",
     })[m] || m;
   }
   function paymentLabel(m) {
-    return ({ cod: "Cash on delivery", prepay: "Prepayment" })[m] || m;
+    return ({ cod: "Наложений платіж", prepay: "Передоплата" })[m] || m;
   }
 
   function showTab(name) {
@@ -30,14 +30,14 @@
   async function loadOrders(userId) {
     const t = window.tapsters;
     const root = $("#orders-list");
-    root.innerHTML = '<div class="empty">Loading…</div>';
+    root.innerHTML = '<div class="empty">Завантаження…</div>';
     const { data: orders, error } = await t.client
       .from("orders")
       .select("id, total, currency, status, delivery_method, delivery_branch, delivery_address, payment_method, card_last4, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
     if (error) { root.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>'; return; }
-    if (!orders.length) { root.innerHTML = '<div class="empty">No orders yet.</div>'; return; }
+    if (!orders.length) { root.innerHTML = '<div class="empty">Поки немає замовлень.</div>'; return; }
 
     // fetch line items
     const ids = orders.map((o) => o.id);
@@ -57,16 +57,16 @@
         <div class="order-row">
           <header>
             <div>
-              <div>Order #${escapeHtml(o.id.slice(0, 8))}</div>
+              <div>Замовлення #${escapeHtml(o.id.slice(0, 8))}</div>
               <div class="muted">${new Date(o.created_at).toLocaleString()}</div>
             </div>
             <span class="status ${escapeHtml(o.status)}">${escapeHtml(o.status)}</span>
           </header>
           <div class="kv">
-            <div class="k">Delivery</div><div>${escapeHtml(deliveryLabel(o.delivery_method))}</div>
-            <div class="k">Branch</div><div>${escapeHtml(o.delivery_branch || "—")}</div>
-            <div class="k">Address</div><div>${escapeHtml(o.delivery_address || "—")}</div>
-            <div class="k">Payment</div>
+            <div class="k">Доставка</div><div>${escapeHtml(deliveryLabel(o.delivery_method))}</div>
+            <div class="k">Відділення</div><div>${escapeHtml(o.delivery_branch || "—")}</div>
+            <div class="k">Адреса</div><div>${escapeHtml(o.delivery_address || "—")}</div>
+            <div class="k">Оплата</div>
             <div>${escapeHtml(paymentLabel(o.payment_method))}${o.card_last4 ? " · ••••" + escapeHtml(o.card_last4) : ""}</div>
           </div>
           <div class="order-items">
@@ -77,7 +77,7 @@
               </div>
             `).join("")}
             <div class="between" style="margin-top:6px">
-              <strong>Total</strong>
+              <strong>Всього</strong>
               <strong>${escapeHtml(window.tapCurrency.format(o.total, o.currency))}</strong>
             </div>
           </div>
@@ -89,7 +89,7 @@
   async function loadMyListings(userId) {
     const t = window.tapsters;
     const root = $("#listings-list");
-    root.innerHTML = '<div class="empty">Loading…</div>';
+    root.innerHTML = '<div class="empty">Завантаження…</div>';
     const { data, error } = await t.client
       .from("items")
       .select("id, title, price, currency, image_url, sold, created_at")
@@ -97,7 +97,7 @@
       .order("created_at", { ascending: false });
     if (error) { root.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>'; return; }
     if (!data.length) {
-      root.innerHTML = '<div class="empty">You have no listings yet. <a href="create-listing.html">Create one</a>.</div>';
+      root.innerHTML = '<div class="empty">У вас поки немає оголошень. <a href="create-listing.html">Створити оголошення</a>.</div>';
       return;
     }
     root.innerHTML = '<div class="grid">' + data.map((it) => `
@@ -108,12 +108,12 @@
             <div class="title">${escapeHtml(it.title)}</div>
             <div class="meta">
               <div class="price">${escapeHtml(window.tapCurrency.formatItem(it.price, it.currency))}</div>
-              <div class="muted">${it.sold ? "sold" : "active"}</div>
+              <div class="muted">${it.sold ? "проданий" : "активний"}</div>
             </div>
           </div>
         </a>
         <div class="row" style="padding:0 12px 12px; gap:8px">
-          <button class="btn danger small js-delete-listing" data-id="${escapeHtml(it.id)}">Delete</button>
+          <button class="btn danger small js-delete-listing" data-id="${escapeHtml(it.id)}">Видалити</button>
         </div>
       </div>
     `).join("") + '</div>';
@@ -123,14 +123,14 @@
         ev.preventDefault();
         ev.stopPropagation();
         const id = btn.getAttribute("data-id");
-        if (!confirm("Delete this listing? This can't be undone.")) return;
+        if (!confirm("Видалити це оголошення? Це неможливо буде відмінити.")) return;
         btn.disabled = true;
         try {
           const { error: delErr } = await t.client.from("items").delete().eq("id", id);
           if (delErr) throw delErr;
           await loadMyListings(userId);
         } catch (e) {
-          alert(e.message || "Could not delete listing.");
+          alert(e.message || "Не вдалося видалити оголошення.");
           btn.disabled = false;
         }
       });
@@ -138,17 +138,17 @@
   }
 
   function displayNameFromProfile(p) {
-    if (!p) return "Tapster";
-    return p.full_name || p.username || "Tapster";
+    if (!p) return "Користувач";
+    return p.full_name || p.username || "Користувач";
   }
   function initialFor(name) {
-    return (String(name || "T")[0] || "T").toUpperCase();
+    return (String(name || "К")[0] || "К").toUpperCase();
   }
 
   async function loadMessages(userId) {
     const t = window.tapsters;
     const root = $("#messages-list");
-    root.innerHTML = '<div class="empty">Loading…</div>';
+    root.innerHTML = '<div class="empty">Завантаження…</div>';
 
     // RLS filters to chats where the current user is buyer OR seller, but
     // we add an explicit .or() so the query is unambiguous to the planner.
@@ -163,7 +163,7 @@
       return;
     }
     if (!chats || !chats.length) {
-      root.innerHTML = '<div class="empty">No messages yet. Open a product page and tap “Написати продавцю” to start a chat with a seller.</div>';
+      root.innerHTML = '<div class="empty">Поки немає повідомлень. Відкрийте сторінку товару та натисніть «Написати продавцю», щоб розпочати чат.</div>';
       return;
     }
 
@@ -185,8 +185,8 @@
       const other = profilesById[otherId];
       const name = displayNameFromProfile(other);
       const about = c.item_title
-        ? "About: " + c.item_title
-        : "Direct message";
+        ? "Про: " + c.item_title
+        : "Особисте повідомлення";
       const when = new Date(c.last_message_at).toLocaleString();
       return `
         <div class="chat-row" data-chat-id="${escapeHtml(c.id)}">
@@ -198,7 +198,7 @@
             </div>
             <div class="chat-meta">${escapeHtml(when)}</div>
           </a>
-          <button class="chat-row-del js-delete-chat" type="button" data-id="${escapeHtml(c.id)}" title="Delete chat">Delete</button>
+          <button class="chat-row-del js-delete-chat" type="button" data-id="${escapeHtml(c.id)}" title="Видалити чат">Видалити</button>
         </div>
       `;
     }).join("") + '</div>';
@@ -208,14 +208,14 @@
         ev.preventDefault();
         ev.stopPropagation();
         const id = btn.getAttribute("data-id");
-        if (!confirm("Delete this chat? Messages will be removed for both participants and can't be recovered.")) return;
+        if (!confirm("Видалити цей чат? Повідомлення будуть видалені для обох учасників і їх неможливо відновити.")) return;
         btn.disabled = true;
         try {
           const { error: delErr } = await t.client.from("chats").delete().eq("id", id);
           if (delErr) throw delErr;
           await loadMessages(userId);
         } catch (e) {
-          alert(e.message || "Could not delete this chat.");
+          alert(e.message || "Не вдалося видалити цей чат.");
           btn.disabled = false;
         }
       });
@@ -246,11 +246,11 @@
           .upsert({ id: user.id, username: username || null, full_name: full_name || null }, { onConflict: "id" });
         if (error) throw error;
         const s = $("#account-success");
-        s.textContent = "Saved.";
+        s.textContent = "Збережено.";
         s.classList.remove("hidden");
       } catch (e) {
         const er = $("#account-error");
-        er.textContent = e.message || "Could not save changes.";
+        er.textContent = e.message || "Не вдалося зберегти зміни.";
         er.classList.remove("hidden");
       }
     }, { once: false });

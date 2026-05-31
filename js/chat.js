@@ -15,8 +15,8 @@
   }
 
   function displayNameFromProfile(p) {
-    if (!p) return "Tapster";
-    return p.full_name || p.username || "Tapster";
+    if (!p) return "Користувач";
+    return p.full_name || p.username || "Користувач";
   }
 
   function initialFor(name) {
@@ -32,8 +32,8 @@
   function formatDayDivider(d) {
     const now = new Date();
     const y = new Date(now); y.setDate(now.getDate() - 1);
-    if (sameDay(d, now)) return "Today";
-    if (sameDay(d, y))   return "Yesterday";
+    if (sameDay(d, now)) return "Сьогодні";
+    if (sameDay(d, y))   return "Вчора";
     return d.toLocaleDateString();
   }
 
@@ -50,13 +50,13 @@
 
   function deliveryLabel(m) {
     return ({
-      nova_poshta: "Nova Poshta",
-      ukrposhta:   "Ukrposhta",
+      nova_poshta: "Нова Пошта",
+      ukrposhta:   "УкрПошта",
       meest:       "Meest",
     })[m] || m || "—";
   }
   function paymentLabel(m) {
-    return ({ cod: "Cash on delivery", prepay: "Prepayment" })[m] || m || "—";
+    return ({ cod: "Наложений платіж", prepay: "Передоплата" })[m] || m || "—";
   }
 
   function tryParseOrderPayload(content) {
@@ -86,19 +86,19 @@
         ? formatMoney(p.total, p.total_currency)
         : "";
     var orderRef =
-      p.order_id ? "Order #" + String(p.order_id).slice(0, 8) : "New order";
+      p.order_id ? "Замовлення #" + String(p.order_id).slice(0, 8) : "Нове замовлення";
 
     var kv = "";
-    if (p.item_title)       kv += '<div class="k">Item</div><div>' + escapeHtml(p.item_title) + (moneyLine ? " · " + escapeHtml(moneyLine) : "") + "</div>";
-    if (totalLine)          kv += '<div class="k">Total</div><div>' + escapeHtml(totalLine) + "</div>";
-    if (p.delivery_method)  kv += '<div class="k">Delivery</div><div>' + escapeHtml(deliveryLabel(p.delivery_method)) + "</div>";
-    if (p.delivery_branch)  kv += '<div class="k">Branch</div><div>' + escapeHtml(p.delivery_branch) + "</div>";
-    if (p.delivery_address) kv += '<div class="k">Address</div><div>' + escapeHtml(p.delivery_address) + "</div>";
+    if (p.item_title)       kv += '<div class="k">Товар</div><div>' + escapeHtml(p.item_title) + (moneyLine ? " · " + escapeHtml(moneyLine) : "") + "</div>";
+    if (totalLine)          kv += '<div class="k">Всього</div><div>' + escapeHtml(totalLine) + "</div>";
+    if (p.delivery_method)  kv += '<div class="k">Доставка</div><div>' + escapeHtml(deliveryLabel(p.delivery_method)) + "</div>";
+    if (p.delivery_branch)  kv += '<div class="k">Відділення</div><div>' + escapeHtml(p.delivery_branch) + "</div>";
+    if (p.delivery_address) kv += '<div class="k">Адреса</div><div>' + escapeHtml(p.delivery_address) + "</div>";
     if (p.payment_method) {
       var payTxt = paymentLabel(p.payment_method) + (p.card_last4 ? " · ••••" + p.card_last4 : "");
-      kv += '<div class="k">Payment</div><div>' + escapeHtml(payTxt) + "</div>";
+      kv += '<div class="k">Оплата</div><div>' + escapeHtml(payTxt) + "</div>";
     }
-    if (p.buyer_name)       kv += '<div class="k">Buyer</div><div>' + escapeHtml(p.buyer_name) + "</div>";
+    if (p.buyer_name)       kv += '<div class="k">Покупець</div><div>' + escapeHtml(p.buyer_name) + "</div>";
 
     return (
       '<div class="chat-msg order-card ' + (mine ? "me" : "them") + '"' +
@@ -109,7 +109,7 @@
           '<span>' + escapeHtml(orderRef) + '</span>' +
         "</div>" +
         '<div class="order-kv">' + kv + "</div>" +
-        '<a class="order-cta" href="cabinet.html#orders">View full receipt in your cabinet →</a>' +
+        '<a class="order-cta" href="cabinet.html#orders">Переглянути повну квитанцію в кабінеті →</a>' +
         '<span class="time">' + escapeHtml(formatTime(d)) + "</span>" +
       "</div>"
     );
@@ -119,7 +119,7 @@
       time the message set grows; it's a small thread, performance is fine. */
   function renderStream(stream, messages, meId) {
     if (!messages.length) {
-      stream.innerHTML = '<div class="chat-empty">No messages yet — say hello!</div>';
+      stream.innerHTML = '<div class="chat-empty">Поки немає повідомлень — привітайтесь!</div>';
       return;
     }
     let lastDay = null;
@@ -192,13 +192,13 @@
       .maybeSingle();
 
     const otherName = displayNameFromProfile(otherProfile);
-    document.title = `Chat with ${otherName} — Tapsters`;
+    document.title = `Чат з ${otherName} — Tapsters`;
     $("#chat-who").textContent = otherName;
     $("#chat-avatar").textContent = initialFor(otherName);
 
     const aboutTxt = chat.item_title
-      ? "About: " + chat.item_title
-      : "Direct message";
+      ? "Про: " + chat.item_title
+      : "Особисте повідомлення";
     $("#chat-about").textContent = aboutTxt;
 
     const itemLink = $("#chat-item-link");
@@ -213,7 +213,7 @@
     const deleteBtn = $("#chat-delete-btn");
     if (deleteBtn) {
       deleteBtn.addEventListener("click", async () => {
-        if (!confirm("Delete this chat? This will remove all messages for both participants and can't be undone.")) return;
+        if (!confirm("Видалити цей чат? Це видалить всі повідомлення для обох учасників і це неможливо відмінити.")) return;
         deleteBtn.disabled = true;
         try {
           const { error: delErr } = await t.client.from("chats").delete().eq("id", chatId);
@@ -223,7 +223,7 @@
           stopPolling();
           location.replace("cabinet.html#messages");
         } catch (e) {
-          alert(e.message || "Could not delete this chat.");
+          alert(e.message || "Не вдалося видалити цей чат.");
           deleteBtn.disabled = false;
         }
       });
@@ -306,7 +306,7 @@
         // Roll back the optimistic message and tell the user.
         messages = messages.filter((m) => m.id !== optimistic.id);
         renderStream(stream, messages, me.id);
-        alert(e.message || "Could not send message.");
+        alert(e.message || "Не вдалося надіслати повідомлення.");
       } finally {
         sendBtn.disabled = false;
         input.disabled = false;

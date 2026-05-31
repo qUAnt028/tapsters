@@ -45,7 +45,7 @@
     const user = await t.getUser();
     if (!user) return addGuest(item, qty);
     if (item.seller_id && item.seller_id === user.id) {
-      throw new Error("You can't add your own listing to your cart.");
+      throw new Error("Ви не можете додати власне оголошення до кошика.");
     }
     const { data: existing } = await t.client
       .from("cart_items")

@@ -12,16 +12,16 @@
     if (!t || !t.isConfigured) {
       // Fallback static categories so the UI still works without Supabase.
       return [
-        { name: "Electronics",    slug: "electronics" },
-        { name: "Fashion",        slug: "fashion" },
-        { name: "Home & Garden",  slug: "home-garden" },
-        { name: "Toys & Hobbies", slug: "toys" },
-        { name: "Sports",         slug: "sports" },
-        { name: "Books & Media",  slug: "books" },
-        { name: "Automotive",     slug: "automotive" },
-        { name: "Collectibles",   slug: "collectibles" },
-        { name: "Beauty",         slug: "beauty" },
-        { name: "Other",          slug: "other" },
+        { name: "Електроніка",      slug: "electronics" },
+        { name: "Мода",             slug: "fashion" },
+        { name: "Дім і сад",         slug: "home-garden" },
+        { name: "Іграшки та хобі",  slug: "toys" },
+        { name: "Спорт",            slug: "sports" },
+        { name: "Книги та медіа",  slug: "books" },
+        { name: "Авто",             slug: "automotive" },
+        { name: "Колекції",        slug: "collectibles" },
+        { name: "Краса",            slug: "beauty" },
+        { name: "Інше",             slug: "other" },
       ];
     }
     const { data, error } = await t.client
@@ -57,7 +57,7 @@
             <button data-act="dec" aria-label="decrease">−</button>
             <span>${item.quantity}</span>
             <button data-act="inc" aria-label="increase">+</button>
-            <button data-act="rm" class="muted" style="margin-left:6px">remove</button>
+            <button data-act="rm" class="rm-btn" type="button">видалити</button>
           </div>
         </div>
         <div></div>
@@ -80,7 +80,7 @@
     panel.innerHTML = "";
 
     if (!items.length) {
-      panel.innerHTML = '<div class="empty">Your cart is empty.</div>';
+      panel.innerHTML = '<div class="empty">Ваш кошик порожній.</div>';
       return;
     }
 
@@ -107,13 +107,13 @@
       totalUSD += window.tapCurrency.convert(it.price * it.quantity, it.currency, "USD");
     });
     const totalDisplay = window.tapCurrency.convert(totalUSD, "USD", display);
-    const totals = el(`<div class="cart-totals"><div>Total</div><div>${window.tapCurrency.format(totalDisplay, display)}</div></div>`);
+    const totals = el(`<div class="cart-totals"><div>Всього</div><div>${window.tapCurrency.format(totalDisplay, display)}</div></div>`);
     panel.appendChild(totals);
 
     const actions = el(`
       <div class="cart-actions">
-        <button class="btn secondary" data-act="clear">Clear</button>
-        <button class="btn" data-act="checkout">Checkout</button>
+        <button class="btn secondary" data-act="clear">Очистити</button>
+        <button class="btn" data-act="checkout">Оформити</button>
       </div>
     `);
     actions.querySelector('[data-act="clear"]').addEventListener("click", async () => {
@@ -126,7 +126,7 @@
         ? await window.tapsters.getUser()
         : null;
       if (!u) {
-        alert("Please log in to check out.");
+        alert("Будь ласка, увійдіть в акаунт, щоб оформити замовлення.");
         location.href = "auth.html?next=checkout.html";
         return;
       }
@@ -252,15 +252,15 @@
       await syncRecentlyViewedScope(user);
       if (user) {
         right.innerHTML = `
-          <a class="icon-btn" href="create-listing.html"><span>Sell</span></a>
+          <a class="icon-btn" href="create-listing.html"><span>Продати</span></a>
           <div class="menu" id="acct-menu">
-            <button class="icon-btn" id="acct-btn" type="button"><span>Account</span> ▾</button>
+            <button class="icon-btn" id="acct-btn" type="button"><span>Акаунт</span> ▾</button>
             <div class="menu-panel" style="min-width:220px">
               <ul>
-                <li data-act="cabinet">My cabinet</li>
-                <li data-act="orders">My orders</li>
-                <li data-act="listings">My listings</li>
-                <li data-act="logout">Log out</li>
+                <li data-act="cabinet">Мій кабінет</li>
+                <li data-act="orders">Мої замовлення</li>
+                <li data-act="listings">Мої оголошення</li>
+                <li data-act="logout">Вийти</li>
               </ul>
             </div>
           </div>
@@ -283,8 +283,8 @@
         });
       } else {
         right.innerHTML = `
-          <a class="icon-btn" href="auth.html"><span>Log in</span></a>
-          <a class="icon-btn" href="auth.html#register"><span>Sign up</span></a>
+          <a class="icon-btn" href="auth.html"><span>Вхід</span></a>
+          <a class="icon-btn" href="auth.html#register"><span>Реєстрація</span></a>
         `;
       }
     }
@@ -301,33 +301,33 @@
     host.innerHTML = `
       <header class="site-header">
         <div class="container">
-          <div class="brand" data-go-home title="Tapsters home">
+          <div class="brand" data-go-home title="Головна Tapsters">
             <span class="brand-mark">T</span><span>Tapsters</span>
           </div>
 
           <div class="menu" id="cat-menu">
             <button class="icon-btn" id="cat-btn" type="button">
-              <span>Categories</span> ▾
+              <span>Категорії</span> ▾
             </button>
             <div class="menu-panel left" style="min-width:240px">
-              <h4>Browse categories</h4>
-              <ul id="cat-list"><li class="muted">Loading…</li></ul>
+              <h4>Оглянути категорії</h4>
+              <ul id="cat-list"><li class="muted">Завантаження…</li></ul>
             </div>
           </div>
 
           <form class="search-wrap" id="search-form" role="search">
-            <input id="search-input" type="search" placeholder="Search Tapsters" aria-label="Search" />
-            <button type="submit" aria-label="Search">🔍</button>
+            <input id="search-input" type="search" placeholder="Пошук в Tapsters" aria-label="Пошук" />
+            <button type="submit" aria-label="Пошук">🔍</button>
           </form>
 
           <div class="header-actions">
             <div class="menu" id="cart-menu">
-              <button class="icon-btn" id="cart-btn" type="button" aria-label="Cart">
-                <span>Cart</span>
+              <button class="icon-btn" id="cart-btn" type="button" aria-label="Кошик">
+                <span>Кошик</span>
                 <span class="badge" data-cart-count style="display:none">0</span>
               </button>
               <div class="menu-panel cart-panel" id="cart-panel">
-                <div class="empty">Your cart is empty.</div>
+                <div class="empty">Ваш кошик порожній.</div>
               </div>
             </div>
             <div id="auth-area" class="row" style="gap:6px"></div>
@@ -337,8 +337,8 @@
               id="theme-toggle"
               role="switch"
               aria-checked="false"
-              aria-label="Switch to dark theme"
-              title="Switch to dark theme"
+              aria-label="Перемкнути на темну тему"
+              title="Перемкнути на темну тему"
             >
               <span class="tt-thumb">
                 <span class="tt-icon tt-icon-sun" aria-hidden="true">☀</span>
@@ -373,6 +373,18 @@
       if (cartMenu && cartMenu.classList.contains("open")) paintCartPanel();
     });
     refreshCartCount();
+
+    // Expose paint helpers so other modules (main.js quick-add)
+    // can ensure the panel is up-to-date BEFORE they open the dropdown.
+    window.tapHeader = window.tapHeader || {};
+    window.tapHeader.paintCartPanel = paintCartPanel;
+    window.tapHeader.openCart = async function () {
+      var menu = document.getElementById("cart-menu");
+      if (!menu) return;
+      // Paint first so the dropdown never shows the stale "empty" state.
+      await paintCartPanel();
+      menu.classList.add("open");
+    };
   }
 
   function wireThemeToggle() {
@@ -381,8 +393,8 @@
     // Sync aria/title to the current theme on first paint.
     var t = window.tapTheme.current();
     btn.setAttribute("aria-checked", t === "dark" ? "true" : "false");
-    btn.setAttribute("aria-label", t === "dark" ? "Switch to light theme" : "Switch to dark theme");
-    btn.title = t === "dark" ? "Switch to light theme" : "Switch to dark theme";
+    btn.setAttribute("aria-label", t === "dark" ? "Перемкнути на світлу тему" : "Перемкнути на темну тему");
+    btn.title = t === "dark" ? "Перемкнути на світлу тему" : "Перемкнути на темну тему";
     btn.addEventListener("click", function (ev) {
       ev.stopPropagation();
       window.tapTheme.toggle();

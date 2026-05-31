@@ -34,8 +34,8 @@
   }
 
   function displayNameFromProfile(p) {
-    if (!p) return "Tapster";
-    return p.full_name || p.username || "Tapster";
+    if (!p) return "Користувач";
+    return p.full_name || p.username || "Користувач";
   }
 
   function activeChatId() {
@@ -66,7 +66,7 @@
     var el = document.createElement("div");
     el.className = "toast";
     el.innerHTML =
-      '<button class="toast-close" type="button" aria-label="Close">×</button>' +
+      '<button class="toast-close" type="button" aria-label="Закрити">×</button>' +
       '<div class="toast-title">' + escapeHtml(opts.title) + "</div>" +
       (opts.subtitle ? '<div class="toast-sub">' + escapeHtml(opts.subtitle) + "</div>" : "") +
       '<div class="toast-body">' + escapeHtml(opts.body) + "</div>";
@@ -194,7 +194,7 @@
         if (!chat) return;
         var otherId = chat.buyer_id === currentUser.id ? chat.seller_id : chat.buyer_id;
         var name = displayNameFromProfile(profilesById[otherId]);
-        var subtitle = chat.item_title ? "About: " + chat.item_title : "Direct message";
+        var subtitle = chat.item_title ? "Про: " + chat.item_title : "Особисте повідомлення";
         var preview;
         if (m.kind === "order") {
           // Order-notification cards have JSON in `content`; show a
