@@ -12,88 +12,88 @@
 
   <main class="container">
     <div id="auth-gate" class="form-card hidden">
-      <h1>Please log in</h1>
-      <p>Checkout is only available to registered users.</p>
-      <a class="btn" href="auth.html?next=checkout.html">Log in</a>
-      <a class="btn secondary" href="auth.html?next=checkout.html#register">Sign up</a>
+      <h1>Будь ласка увійдіть в акаунт.</h1>
+      <p>Чек доступний лише зареєстрованим користувачам.</p>
+      <a class="btn" href="auth.html?next=checkout.html">Вхід</a>
+      <a class="btn secondary" href="auth.html?next=checkout.html#register">Реєстрація</a>
     </div>
 
     <div id="empty-cart" class="form-card hidden">
-      <h1>Your cart is empty</h1>
-      <p>Browse the marketplace to add some items.</p>
-      <a class="btn" href="index.html">Continue shopping</a>
+      <h1>Кошик порожній.</h1>
+      <p>Подиви асортимент та додай речей</p>
+      <a class="btn" href="index.html">Продовжити пошуки</a>
     </div>
 
     <div id="success-card" class="form-card hidden">
-      <h1>🎉 Order placed!</h1>
-      <p id="success-msg">Your order has been recorded.</p>
-      <a class="btn" href="cabinet.html#orders">View my orders</a>
-      <a class="btn secondary" href="index.html">Keep shopping</a>
+      <h1>🎉 Замовлення оформлено!</h1>
+      <p id="success-msg">Ваше замовлення було зафіксовано.</p>
+      <a class="btn" href="cabinet.html#orders">Мої замовлення</a>
+      <a class="btn secondary" href="index.html">Продовжити пошуки</a>
     </div>
 
     <div id="checkout-grid" class="hidden" style="display:grid; grid-template-columns: 1.2fr 1fr; gap:24px; margin-top:24px;">
       <form id="checkout-form" class="form-card" style="margin:0">
-        <h1>Checkout</h1>
+        <h1>Чек</h1>
 
         <div id="form-error" class="error hidden"></div>
 
-        <h3 style="margin-top: 8px; color: var(--purple-800)">Delivery method</h3>
+        <h3 style="margin-top: 8px; color: var(--purple-800)">Метод доставки</h3>
         <div class="option-cards" id="delivery-cards">
           <label class="option-card" data-method="nova_poshta">
             <input type="radio" name="delivery" value="nova_poshta" hidden checked>
-            <div>Nova Poshta</div>
-            <small>Branch / courier in Ukraine</small>
+            <div>Нова Пошта</div>
+            <small>Звичайна/кур'єрська доставка</small>
           </label>
           <label class="option-card" data-method="ukrposhta">
             <input type="radio" name="delivery" value="ukrposhta" hidden>
-            <div>Ukrposhta</div>
-            <small>National post service</small>
+            <div>УкрПошта</div>
+            <small>Національна служба доставки</small>
           </label>
           <label class="option-card" data-method="meest">
             <input type="radio" name="delivery" value="meest" hidden>
             <div>Meest</div>
-            <small>International courier</small>
+            <small>Інтернаціональний кур'єр</small>
           </label>
         </div>
 
         <div class="form-grid-2 mt-12">
           <div class="form-row">
-            <label for="branch">Branch / office</label>
+            <label for="branch">Відділення</label>
             <input type="text" id="branch" placeholder="e.g. Branch #12 / Pickup point" />
           </div>
           <div class="form-row">
-            <label for="address">Delivery address</label>
+            <label for="address">Адреса доставки</label>
             <input type="text" id="address" placeholder="Street, building, apt., city, ZIP" />
           </div>
         </div>
 
-        <h3 style="margin-top: 16px; color: var(--purple-800)">Payment method</h3>
+        <h3 style="margin-top: 16px; color: var(--purple-800)">Спосіб оплати</h3>
         <div class="option-cards two" id="payment-cards">
           <label class="option-card active" data-method="cod">
             <input type="radio" name="payment" value="cod" hidden checked>
-            <div>Cash on delivery</div>
-            <small>Pay when the parcel arrives</small>
+            <div>Наложений платіж</div>
+            <small>Оплата при заюиранні посилки.</small>
           </label>
           <label class="option-card" data-method="prepay">
             <input type="radio" name="payment" value="prepay" hidden>
-            <div>Prepayment</div>
-            <small>Pay now with a bank card</small>
+            <div>Передоплата</div>
+            <small>Оплата тут і зараз карткою.</small>
           </label>
         </div>
 
         <div id="card-fields" class="hidden">
           <div class="form-row">
-            <label for="card-number">Card number</label>
+            <label for="card-number">Номер карти</label>
             <input type="text" id="card-number" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" autocomplete="cc-number" />
           </div>
           <div class="form-grid-2">
             <div class="form-row">
-              <label for="card-name">Cardholder name</label>
+              <label for="card-name">Ім'я власника</label>
               <input type="text" id="card-name" placeholder="JANE DOE" autocomplete="cc-name" />
             </div>
             <div class="form-grid-2">
               <div class="form-row">
-                <label for="card-expiry">Expiry</label>
+                <label for="card-expiry">Строк дії</label>
                 <input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" />
               </div>
               <div class="form-row">
@@ -102,21 +102,21 @@
               </div>
             </div>
           </div>
-          <p class="muted" style="font-size:.85rem">Demo only — no card data is stored or charged. We keep just the last 4 digits with your order.</p>
+          <p class="muted" style="font-size:.85rem">Тільки для демонстрації - кошти не списуються. Ми використовуємо лише останні 4 символи для показу чеку.</p>
         </div>
 
-        <button class="btn full mt-12" type="submit" id="submit-btn">Place order</button>
+        <button class="btn full mt-12" type="submit" id="submit-btn">Створити замовлення</button>
       </form>
 
       <aside class="form-card" style="margin:0; max-width: none">
-        <h2 style="margin-top:0; color: var(--purple-800)">Order summary</h2>
+        <h2 style="margin-top:0; color: var(--purple-800)">Сума</h2>
         <div id="cart-summary"></div>
-        <div class="cart-totals" style="margin-top:8px"><div>Total</div><div id="grand-total">—</div></div>
+        <div class="cart-totals" style="margin-top:8px"><div>Всього</div><div id="grand-total">—</div></div>
       </aside>
     </div>
   </main>
 
-  <footer class="site-footer"><div class="container">© Tapsters</div></footer>
+  <footer class="site-footer"><div class="container">© Tapsters Original</div></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/theme.js?v=20260508h"></script>
