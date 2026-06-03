@@ -352,5 +352,27 @@
 
     await paintReviews(id);
     await setupReviewForm(id);
+
+    // Admin: show "Видалити акаунт (адмін)" button when an admin views
+    // someone else's profile. Cascades through admin_delete_account RPC.
+    const me = t && t.isConfigured ? await t.getUser() : null;
+    if (me && me.id !== id && window.tapAdmin && (await window.tapAdmin.isAdmin())) {
+      const btn = document.getElementById("admin-delete-account-btn");
+      if (btn) {
+        btn.classList.remove("hidden");
+        btn.addEventListener("click", async () => {
+          if (!confirm(`Видалити акаунт «${name}» разом зі всіма його оголошеннями, відгуками, чатами та замовленнями? Це неможливо відмінити.`)) return;
+          btn.disabled = true;
+          try {
+            await window.tapAdmin.deleteAccount(id);
+            alert("Акаунт видалено.");
+            location.href = "index.html";
+          } catch (e) {
+            alert(e.message || "Не вдалося видалити акаунт.");
+            btn.disabled = false;
+          }
+        });
+      }
+    }
   });
 })();

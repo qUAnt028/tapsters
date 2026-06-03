@@ -7,8 +7,67 @@ create table if not exists public.profiles (
   username    text unique,
   full_name   text,
   avatar_url  text,
+  is_admin    boolean not null default false,
   created_at  timestamptz not null default now()
 );
+
+-- Make schema.sql safe to re-run on an existing project that doesn't yet
+-- have the is_admin column. (No-op when the column already exists.)
+alter table public.profiles
+  add column if not exists is_admin boolean not null default false;
+
+-- ----- admin helper -----
+-- A SECURITY DEFINER helper used by RLS policies and a few admin-only RPCs.
+-- Returns true when the *currently authenticated user* is flagged as admin
+-- in their profile row. Wrapped as a function (instead of inlined into each
+-- policy) so a single source of truth governs who is privileged.
+create or replace function public.is_admin() returns boolean as $$
+  select coalesce(
+    (select is_admin from public.profiles where id = auth.uid()),
+    false
+  );
+$$ language sql security definer stable;
+
+-- The function reads from public.profiles which has RLS. Mark the function
+-- as security definer (above) so it runs with the table owner's permissions
+-- and is therefore not blocked by the caller's RLS visibility.
+revoke all on function public.is_admin() from public;
+grant execute on function public.is_admin() to anon, authenticated;
+
+-- ----- admin: cascade-delete an account -----
+-- Auth row deletion requires the service_role and is therefore not safe to
+-- expose to the browser. Instead this RPC removes every row owned by
+-- target_user across our tables (items, reviews, chats, messages, cart,
+-- orders, profile). The orphaned auth.users row remains but the account
+-- can no longer participate in the app: there's no profile, no listings,
+-- no cart, etc., so signing in just lands on an empty session.
+create or replace function public.admin_delete_account(target_user uuid)
+returns void as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Only admins can delete accounts';
+  end if;
+  if target_user is null then
+    raise exception 'target_user is required';
+  end if;
+
+  delete from public.cart_items   where user_id = target_user;
+  delete from public.order_items  where order_id in (
+    select id from public.orders where user_id = target_user
+  );
+  delete from public.orders       where user_id = target_user;
+  delete from public.messages     where sender_id = target_user;
+  delete from public.chats        where buyer_id = target_user
+                                     or seller_id = target_user;
+  delete from public.reviews      where user_id = target_user
+                                     or subject_id = target_user;
+  delete from public.items        where seller_id = target_user;
+  delete from public.profiles     where id = target_user;
+end;
+$$ language plpgsql security definer;
+
+revoke all on function public.admin_delete_account(uuid) from public;
+grant execute on function public.admin_delete_account(uuid) to authenticated;
 
 -- ----- categories -----
 create table if not exists public.categories (
@@ -158,38 +217,53 @@ alter table public.chats       enable row level security;
 alter table public.messages    enable row level security;
 
 -- profiles
-drop policy if exists "profiles read all"    on public.profiles;
-drop policy if exists "profiles insert self" on public.profiles;
-drop policy if exists "profiles update self" on public.profiles;
-create policy "profiles read all"    on public.profiles for select using (true);
-create policy "profiles insert self" on public.profiles for insert with check (auth.uid() = id);
-create policy "profiles update self" on public.profiles for update using (auth.uid() = id);
+drop policy if exists "profiles read all"          on public.profiles;
+drop policy if exists "profiles insert self"       on public.profiles;
+drop policy if exists "profiles update self"       on public.profiles;
+drop policy if exists "profiles update self admin" on public.profiles;
+drop policy if exists "profiles delete admin"      on public.profiles;
+create policy "profiles read all"          on public.profiles for select using (true);
+create policy "profiles insert self"       on public.profiles for insert with check (auth.uid() = id);
+-- A user can edit their own profile; an admin can edit any profile.
+create policy "profiles update self admin" on public.profiles for update
+  using (auth.uid() = id or public.is_admin());
+-- Only admins can wipe a profile row. Regular users disable their account
+-- via Supabase auth APIs (which cascade-delete the profile via the FK).
+create policy "profiles delete admin"      on public.profiles for delete using (public.is_admin());
 
 -- categories (read-only on the client)
 drop policy if exists "categories read all" on public.categories;
 create policy "categories read all" on public.categories for select using (true);
 
 -- items
-drop policy if exists "items read all"      on public.items;
-drop policy if exists "items insert seller" on public.items;
-drop policy if exists "items update seller" on public.items;
-drop policy if exists "items delete seller" on public.items;
-create policy "items read all"      on public.items for select using (true);
-create policy "items insert seller" on public.items for insert with check (auth.uid() = seller_id);
-create policy "items update seller" on public.items for update using (auth.uid() = seller_id);
-create policy "items delete seller" on public.items for delete using (auth.uid() = seller_id);
+drop policy if exists "items read all"            on public.items;
+drop policy if exists "items insert seller"       on public.items;
+drop policy if exists "items update seller"       on public.items;
+drop policy if exists "items delete seller"       on public.items;
+drop policy if exists "items update seller admin" on public.items;
+drop policy if exists "items delete seller admin" on public.items;
+create policy "items read all"            on public.items for select using (true);
+create policy "items insert seller"       on public.items for insert with check (auth.uid() = seller_id);
+-- Either the seller (own listing) or any admin can update/delete a listing.
+create policy "items update seller admin" on public.items for update
+  using (auth.uid() = seller_id or public.is_admin());
+create policy "items delete seller admin" on public.items for delete
+  using (auth.uid() = seller_id or public.is_admin());
 
 -- reviews (about a seller account; not items)
-drop policy if exists "reviews read all"      on public.reviews;
-drop policy if exists "reviews insert auth"   on public.reviews;
-drop policy if exists "reviews update author" on public.reviews;
-drop policy if exists "reviews delete author" on public.reviews;
-create policy "reviews read all"      on public.reviews for select using (true);
+drop policy if exists "reviews read all"            on public.reviews;
+drop policy if exists "reviews insert auth"         on public.reviews;
+drop policy if exists "reviews update author"       on public.reviews;
+drop policy if exists "reviews delete author"       on public.reviews;
+drop policy if exists "reviews delete author admin" on public.reviews;
+create policy "reviews read all"            on public.reviews for select using (true);
 -- a logged-in user can only review somebody else, never themselves
-create policy "reviews insert auth"   on public.reviews for insert
+create policy "reviews insert auth"         on public.reviews for insert
   with check (auth.uid() = user_id and auth.uid() <> subject_id);
-create policy "reviews update author" on public.reviews for update using (auth.uid() = user_id);
-create policy "reviews delete author" on public.reviews for delete using (auth.uid() = user_id);
+create policy "reviews update author"       on public.reviews for update using (auth.uid() = user_id);
+-- Either the author of the review or an admin can wipe a review.
+create policy "reviews delete author admin" on public.reviews for delete
+  using (auth.uid() = user_id or public.is_admin());
 
 -- orders
 drop policy if exists "orders read self"   on public.orders;
@@ -220,33 +294,39 @@ create policy "cart update self" on public.cart_items for update using (auth.uid
 create policy "cart delete self" on public.cart_items for delete using (auth.uid() = user_id);
 
 -- chats (only the two participants can see / change the thread)
-drop policy if exists "chats read participant"   on public.chats;
-drop policy if exists "chats insert buyer"       on public.chats;
-drop policy if exists "chats update participant" on public.chats;
-drop policy if exists "chats delete participant" on public.chats;
-create policy "chats read participant" on public.chats for select using (
-  auth.uid() = buyer_id or auth.uid() = seller_id
+drop policy if exists "chats read participant"         on public.chats;
+drop policy if exists "chats insert buyer"             on public.chats;
+drop policy if exists "chats update participant"       on public.chats;
+drop policy if exists "chats delete participant"       on public.chats;
+drop policy if exists "chats read participant admin"   on public.chats;
+drop policy if exists "chats update participant admin" on public.chats;
+drop policy if exists "chats delete participant admin" on public.chats;
+create policy "chats read participant admin" on public.chats for select using (
+  auth.uid() = buyer_id or auth.uid() = seller_id or public.is_admin()
 );
 create policy "chats insert buyer" on public.chats for insert with check (
   -- The viewer must be the buyer (you can't open a chat on behalf of
   -- somebody else) and must NOT be the seller of the same item.
   auth.uid() = buyer_id and auth.uid() <> seller_id
 );
-create policy "chats update participant" on public.chats for update using (
-  auth.uid() = buyer_id or auth.uid() = seller_id
+create policy "chats update participant admin" on public.chats for update using (
+  auth.uid() = buyer_id or auth.uid() = seller_id or public.is_admin()
 );
--- Either participant can wipe the thread; cascades to its messages
--- thanks to messages.chat_id's ON DELETE CASCADE FK.
-create policy "chats delete participant" on public.chats for delete using (
-  auth.uid() = buyer_id or auth.uid() = seller_id
+-- Either participant or any admin can wipe the thread; cascades to its
+-- messages thanks to messages.chat_id's ON DELETE CASCADE FK.
+create policy "chats delete participant admin" on public.chats for delete using (
+  auth.uid() = buyer_id or auth.uid() = seller_id or public.is_admin()
 );
 
 -- messages (read/write only if the viewer is one of the two participants
--- in the parent chat row)
-drop policy if exists "messages read participant"   on public.messages;
-drop policy if exists "messages insert participant" on public.messages;
-create policy "messages read participant" on public.messages for select using (
-  exists (
+-- in the parent chat row, or any admin)
+drop policy if exists "messages read participant"        on public.messages;
+drop policy if exists "messages insert participant"      on public.messages;
+drop policy if exists "messages read participant admin"  on public.messages;
+drop policy if exists "messages delete participant admin" on public.messages;
+create policy "messages read participant admin" on public.messages for select using (
+  public.is_admin()
+  or exists (
     select 1 from public.chats c
     where c.id = messages.chat_id
       and (c.buyer_id = auth.uid() or c.seller_id = auth.uid())
@@ -255,6 +335,15 @@ create policy "messages read participant" on public.messages for select using (
 create policy "messages insert participant" on public.messages for insert with check (
   auth.uid() = sender_id
   and exists (
+    select 1 from public.chats c
+    where c.id = messages.chat_id
+      and (c.buyer_id = auth.uid() or c.seller_id = auth.uid())
+  )
+);
+create policy "messages delete participant admin" on public.messages for delete using (
+  public.is_admin()
+  or auth.uid() = sender_id
+  or exists (
     select 1 from public.chats c
     where c.id = messages.chat_id
       and (c.buyer_id = auth.uid() or c.seller_id = auth.uid())
@@ -279,3 +368,16 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- ----- Promoting a user to admin -----
+-- There is intentionally NO UI flow for granting admin: bootstrap your
+-- admin account by signing up like any other user, then run ONE of:
+--
+--   update public.profiles set is_admin = true
+--    where username = 'your-username';
+--
+--   update public.profiles set is_admin = true
+--    where id = (select id from auth.users where email = 'you@example.com');
+--
+-- Once flagged, the account sees an extra "Адмін" tab in the cabinet and
+-- gets "Видалити (адмін)" buttons on every listing and seller profile.

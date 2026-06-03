@@ -27,6 +27,126 @@
     history.replaceState(null, "", "#" + name);
   }
 
+  function adminListingCard(it, sellerName) {
+    return `
+      <div class="card" data-id="${escapeHtml(it.id)}">
+        <a href="item.html?id=${encodeURIComponent(it.id)}">
+          <div class="thumb">${it.image_url ? `<img src="${escapeHtml(it.image_url)}" alt="">` : '<div style="font-size:42px">\u{1F4E6}</div>'}</div>
+          <div class="body">
+            <div class="title">${escapeHtml(it.title)}</div>
+            <div class="meta">
+              <div class="price">${escapeHtml(window.tapCurrency.formatItem(it.price, it.currency))}</div>
+              <div class="muted">${it.sold ? "проданий" : "активний"}</div>
+            </div>
+            <div class="muted" style="margin-top:4px; font-size:.8rem">Продавець: ${escapeHtml(sellerName)}</div>
+          </div>
+        </a>
+        <div class="row" style="padding:0 12px 12px; gap:8px">
+          <button class="btn danger small js-admin-delete-listing" data-id="${escapeHtml(it.id)}">Видалити (адмін)</button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function loadAllListingsAdmin() {
+    const t = window.tapsters;
+    const root = $("#admin-listings-list");
+    root.innerHTML = '<div class="empty">Завантаження…</div>';
+    const { data: items, error } = await t.client
+      .from("items")
+      .select("id, title, price, currency, image_url, sold, seller_id, created_at")
+      .order("created_at", { ascending: false });
+    if (error) { root.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>'; return; }
+    if (!items || !items.length) { root.innerHTML = '<div class="empty">У базі немає жодного оголошення.</div>'; return; }
+
+    const sellerIds = Array.from(new Set(items.map((i) => i.seller_id)));
+    const profilesById = {};
+    if (sellerIds.length) {
+      const { data: profiles } = await t.client
+        .from("profiles")
+        .select("id, username, full_name")
+        .in("id", sellerIds);
+      (profiles || []).forEach((p) => { profilesById[p.id] = p; });
+    }
+
+    root.innerHTML = '<div class="grid">' + items.map((it) =>
+      adminListingCard(it, displayNameFromProfile(profilesById[it.seller_id]))
+    ).join("") + '</div>';
+
+    root.querySelectorAll(".js-admin-delete-listing").forEach((btn) => {
+      btn.addEventListener("click", async (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const id = btn.getAttribute("data-id");
+        if (!confirm("Видалити це оголошення як адмін? Це неможливо буде відмінити.")) return;
+        btn.disabled = true;
+        try {
+          await window.tapAdmin.deleteItem(id);
+          await loadAllListingsAdmin();
+        } catch (e) {
+          alert(e.message || "Не вдалося видалити оголошення.");
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  async function loadAllUsersAdmin(currentUserId) {
+    const t = window.tapsters;
+    const root = $("#admin-users-list");
+    root.innerHTML = '<div class="empty">Завантаження…</div>';
+    const { data: users, error } = await t.client
+      .from("profiles")
+      .select("id, username, full_name, is_admin, created_at")
+      .order("created_at", { ascending: false });
+    if (error) { root.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>'; return; }
+    if (!users || !users.length) { root.innerHTML = '<div class="empty">Акаунтів немає.</div>'; return; }
+
+    root.innerHTML = '<div class="admin-user-list">' + users.map((u) => {
+      const name = displayNameFromProfile(u);
+      const isSelf = u.id === currentUserId;
+      return `
+        <div class="admin-user-row">
+          <div class="admin-user-avatar">${escapeHtml(initialFor(name))}</div>
+          <div class="admin-user-body">
+            <div class="admin-user-name">
+              <a href="seller.html?id=${encodeURIComponent(u.id)}">${escapeHtml(name)}</a>
+              ${u.is_admin ? '<span class="admin-pill">адмін</span>' : ""}
+            </div>
+            <div class="muted" style="font-size:.8rem">
+              ${u.username ? "@" + escapeHtml(u.username) : "без логіну"} · зареєстрований ${new Date(u.created_at).toLocaleDateString()}
+            </div>
+          </div>
+          <button class="btn danger small js-admin-delete-user"
+                  data-id="${escapeHtml(u.id)}"
+                  data-name="${escapeHtml(name)}"
+                  ${isSelf ? "disabled title='Ви не можете видалити власний акаунт з цього екрану.'" : ""}>
+            Видалити
+          </button>
+        </div>
+      `;
+    }).join("") + '</div>';
+
+    root.querySelectorAll(".js-admin-delete-user").forEach((btn) => {
+      btn.addEventListener("click", async (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const id = btn.getAttribute("data-id");
+        const name = btn.getAttribute("data-name") || "цей акаунт";
+        if (!confirm(`Видалити акаунт «${name}» разом зі всіма його оголошеннями, відгуками, чатами та замовленнями? Це неможливо відмінити.`)) return;
+        btn.disabled = true;
+        try {
+          await window.tapAdmin.deleteAccount(id);
+          await loadAllUsersAdmin(currentUserId);
+          await loadAllListingsAdmin();
+        } catch (e) {
+          alert(e.message || "Не вдалося видалити акаунт.");
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
   async function loadOrders(userId) {
     const t = window.tapsters;
     const root = $("#orders-list");
@@ -275,12 +395,23 @@
       tab.addEventListener("click", () => showTab(tab.dataset.tab))
     );
 
+    const isAdmin = window.tapAdmin ? await window.tapAdmin.isAdmin() : false;
+    const validTabs = ["orders", "listings", "messages", "account"];
+    if (isAdmin) {
+      $("#admin-tab-btn").classList.remove("hidden");
+      validTabs.push("admin");
+    }
+
     const initial = (location.hash || "#orders").slice(1);
-    showTab(["orders", "listings", "messages", "account"].includes(initial) ? initial : "orders");
+    showTab(validTabs.includes(initial) ? initial : "orders");
 
     await loadOrders(user.id);
     await loadMyListings(user.id);
     await loadMessages(user.id);
     await loadAccount(user);
+    if (isAdmin) {
+      await loadAllListingsAdmin();
+      await loadAllUsersAdmin(user.id);
+    }
   });
 })();

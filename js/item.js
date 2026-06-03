@@ -152,6 +152,24 @@
           delBtn.disabled = false;
         }
       });
+    } else if (window.tapAdmin && (await window.tapAdmin.isAdmin())) {
+      // Admin viewing somebody else's listing — surface a separate
+      // "Видалити (адмін)" button so the regular Buy / Cart / Chat
+      // buttons still work for testing.
+      const adminBtn = $("#admin-delete-btn");
+      adminBtn.classList.remove("hidden");
+      adminBtn.addEventListener("click", async () => {
+        if (!confirm("Видалити це оголошення як адмін? Це неможливо буде відмінити.")) return;
+        adminBtn.disabled = true;
+        try {
+          await window.tapAdmin.deleteItem(item.id);
+          alert("Оголошення видалено.");
+          location.href = "index.html";
+        } catch (e) {
+          alert(e.message || "Не вдалося видалити оголошення.");
+          adminBtn.disabled = false;
+        }
+      });
     }
 
     // Chat-with-seller button. Creates the (item, buyer) chat row if it
