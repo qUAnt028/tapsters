@@ -102,38 +102,10 @@
     });
   }
 
-  async function loadCategories(active) {
-    const t = window.tapsters;
-    const chips = $("#cat-chips");
-    if (!chips) return;
-    let cats = [];
-    if (t && t.isConfigured) {
-      const { data } = await t.client.from("categories").select("name, slug").order("name");
-      cats = data || [];
-    }
-    if (!cats.length) {
-      cats = [
-        { name: "Електроніка", slug: "electronics" },
-        { name: "Мода", slug: "fashion" },
-        { name: "Дім і сад", slug: "home-garden" },
-        { name: "Іграшки та хобі", slug: "toys" },
-        { name: "Спорт", slug: "sports" },
-        { name: "Книги та медіа", slug: "books" },
-        { name: "Авто", slug: "automotive" },
-        { name: "Колекції", slug: "collectibles" },
-        { name: "Краса", slug: "beauty" },
-        { name: "Інше", slug: "other" },
-      ];
-    }
-    chips.innerHTML =
-      `<a class="chip ${!active ? "active" : ""}" href="index.html">Всі</a>` +
-      cats
-        .map(
-          (c) =>
-            `<a class="chip ${active === c.slug ? "active" : ""}" href="index.html?category=${encodeURIComponent(c.slug)}">${escapeHtml(c.name)}</a>`
-        )
-        .join("");
-  }
+  // Category chips used to live on the home page; they've been removed in
+  // favour of the header "Категорії" dropdown, which is the single source of
+  // category navigation. (If you reintroduce a category panel later, just
+  // restore this function and call it from DOMContentLoaded again.)
 
   async function loadListings({ q, category }) {
     const grid = $("#listing-grid");
@@ -181,16 +153,29 @@
   function paintRecentlyViewed() {
     const grid = $("#recent-grid");
     const empty = $("#recent-empty");
+    const clearBtn = $("#clear-recent-btn");
     if (!grid || !empty) return;
     const items = window.tapRecent.list();
     recentCache = items;
     if (!items.length) {
       grid.innerHTML = "";
       empty.classList.remove("hidden");
+      if (clearBtn) clearBtn.classList.add("hidden");
       return;
     }
     empty.classList.add("hidden");
     grid.innerHTML = items.map(cardHtml).join("");
+    if (clearBtn) clearBtn.classList.remove("hidden");
+  }
+
+  function wireClearRecent() {
+    const clearBtn = $("#clear-recent-btn");
+    if (!clearBtn) return;
+    clearBtn.addEventListener("click", () => {
+      if (!confirm("Очистити список нещодавно переглянутих товарів?")) return;
+      window.tapRecent.clear();
+      paintRecentlyViewed();
+    });
   }
 
   function wireCurrency() {
@@ -214,6 +199,8 @@
       $("#page-title").textContent = `Результати пошуку: «${q}»`;
     } else if (category) {
       $("#page-title").textContent = `Категорія: ${category.replace(/-/g, " ")}`;
+    } else {
+      $("#page-title").textContent = "Свіжі оголошення";
     }
 
     $("#hero-cta").addEventListener("click", async () => {
@@ -225,7 +212,7 @@
 
     wireCurrency();
     wireQuickActionsOnce();
-    loadCategories(category);
+    wireClearRecent();
     loadListings({ q, category });
     paintRecentlyViewed();
 

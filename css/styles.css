@@ -1319,3 +1319,76 @@ section.section h2 {
   opacity: .55;
   cursor: not-allowed;
 }
+
+/* ---------- Compact button variant ---------- */
+.btn.small {
+  padding: 6px 12px;
+  font-size: .85rem;
+}
+
+/* ---------- Currency picker (home page) ---------- */
+.currency-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.currency-pick .muted { user-select: none; }
+
+.select-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -6px;
+  border-right: 2px solid var(--purple-800);
+  border-bottom: 2px solid var(--purple-800);
+  transform: rotate(45deg);
+  pointer-events: none;
+  transition: border-color .25s ease, transform .15s ease;
+}
+[data-theme="dark"] .select-wrap::after {
+  border-right-color: #d6bdff;
+  border-bottom-color: #d6bdff;
+}
+.select-wrap:focus-within::after { transform: rotate(225deg); margin-top: -2px; }
+
+select.select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  color: var(--surface-text);
+  padding: 8px 34px 8px 12px;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease,
+              background-color .25s ease, color .25s ease;
+}
+select.select:hover {
+  border-color: var(--purple-500);
+}
+select.select:focus {
+  outline: 0;
+  border-color: var(--purple-500);
+  box-shadow: 0 0 0 3px var(--purple-100);
+}
+[data-theme="dark"] select.select {
+  background: #1c142e;
+  border-color: #3a2d56;
+  color: #ece4ff;
+}
+[data-theme="dark"] select.select:hover { border-color: var(--purple-500); }
+[data-theme="dark"] select.select:focus {
+  box-shadow: 0 0 0 3px rgba(168, 124, 240, .25);
+}
