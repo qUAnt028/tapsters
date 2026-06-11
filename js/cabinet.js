@@ -6,6 +6,8 @@
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
     }[c]));
 
+  const PH_THUMB = '<svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>';
+
   function deliveryLabel(m) {
     return ({
       nova_poshta: "Нова Пошта",
@@ -31,7 +33,7 @@
     return `
       <div class="card" data-id="${escapeHtml(it.id)}">
         <a href="item.html?id=${encodeURIComponent(it.id)}">
-          <div class="thumb">${it.image_url ? `<img src="${escapeHtml(it.image_url)}" alt="">` : '<div style="font-size:42px">\u{1F4E6}</div>'}</div>
+          <div class="thumb">${it.image_url ? `<img src="${escapeHtml(it.image_url)}" alt="">` : PH_THUMB}</div>
           <div class="body">
             <div class="title">${escapeHtml(it.title)}</div>
             <div class="meta">
@@ -206,6 +208,48 @@
     }).join("");
   }
 
+  async function loadWishlist() {
+    const root = $("#wishlist-list");
+    root.innerHTML = '<div class="empty">Завантаження…</div>';
+    const items = await window.tapWishlist.list();
+    if (!items.length) {
+      root.innerHTML = '<div class="empty">Список бажань порожній. Натисніть на сердечко на будь-якому товарі, щоб додати його сюди.</div>';
+      return;
+    }
+    root.innerHTML = '<div class="grid">' + items.map((it) => `
+      <div class="card" data-id="${escapeHtml(it.id)}">
+        <a href="item.html?id=${encodeURIComponent(it.id)}">
+          <div class="thumb">${it.image_url ? `<img src="${escapeHtml(it.image_url)}" alt="">` : PH_THUMB}</div>
+          <div class="body">
+            <div class="title">${escapeHtml(it.title)}</div>
+            <div class="meta">
+              <div class="price">${escapeHtml(window.tapCurrency.formatItem(it.price, it.currency))}</div>
+              <div class="muted">${it.sold ? "проданий" : "активний"}</div>
+            </div>
+          </div>
+        </a>
+        <div class="row" style="padding:0 12px 12px; gap:8px">
+          <button class="btn secondary small js-remove-wish" data-id="${escapeHtml(it.id)}">Прибрати зі списку</button>
+        </div>
+      </div>
+    `).join("") + '</div>';
+
+    root.querySelectorAll(".js-remove-wish").forEach((btn) => {
+      btn.addEventListener("click", async (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        btn.disabled = true;
+        try {
+          await window.tapWishlist.remove(btn.getAttribute("data-id"));
+          await loadWishlist();
+        } catch (e) {
+          alert(e.message || "Не вдалося прибрати товар зі списку бажань.");
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
   async function loadMyListings(userId) {
     const t = window.tapsters;
     const root = $("#listings-list");
@@ -223,7 +267,7 @@
     root.innerHTML = '<div class="grid">' + data.map((it) => `
       <div class="card" data-id="${escapeHtml(it.id)}">
         <a href="item.html?id=${encodeURIComponent(it.id)}">
-          <div class="thumb">${it.image_url ? `<img src="${escapeHtml(it.image_url)}" alt="">` : '<div style="font-size:42px">📦</div>'}</div>
+          <div class="thumb">${it.image_url ? `<img src="${escapeHtml(it.image_url)}" alt="">` : PH_THUMB}</div>
           <div class="body">
             <div class="title">${escapeHtml(it.title)}</div>
             <div class="meta">
@@ -396,7 +440,7 @@
     );
 
     const isAdmin = window.tapAdmin ? await window.tapAdmin.isAdmin() : false;
-    const validTabs = ["orders", "listings", "messages", "account"];
+    const validTabs = ["orders", "wishlist", "listings", "messages", "account"];
     if (isAdmin) {
       $("#admin-tab-btn").classList.remove("hidden");
       validTabs.push("admin");
@@ -406,6 +450,7 @@
     showTab(validTabs.includes(initial) ? initial : "orders");
 
     await loadOrders(user.id);
+    await loadWishlist();
     await loadMyListings(user.id);
     await loadMessages(user.id);
     await loadAccount(user);

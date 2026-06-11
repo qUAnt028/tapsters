@@ -107,7 +107,7 @@
     const priceStr = window.tapCurrency.formatItem(item.price, item.currency);
     return `
       <a class="card" href="item.html?id=${encodeURIComponent(item.id)}">
-        <div class="thumb">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="">` : '<div style="font-size:42px">📦</div>'}</div>
+        <div class="thumb">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="">` : '<svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>'}</div>
         <div class="body">
           <div class="title">${escapeHtml(item.title)}</div>
           <div class="meta">

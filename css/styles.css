@@ -297,6 +297,14 @@ input, textarea, select { font-family: inherit; font-size: 1rem; }
   background: var(--purple-600); color: var(--white);
   display: grid; place-items: center;
 }
+.search-wrap button svg { display: block; }
+
+/* Minimalist line-art placeholder for items without a photo. */
+.ph-icon {
+  width: 48px; height: 48px;
+  opacity: .6;
+}
+.item-image .ph-icon { width: 72px; height: 72px; }
 
 .header-actions {
   display: flex; align-items: center; gap: 8px;
@@ -449,6 +457,28 @@ section.section h2 {
   position: relative;
 }
 .card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Heart button in the top-right corner of card thumbnails. */
+.card .wish-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 34px; height: 34px;
+  border: none; border-radius: 50%;
+  background: rgba(255,255,255,.92);
+  color: var(--purple-700);
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.card .wish-btn svg { width: 18px; height: 18px; display: block; }
+.card .wish-btn:hover { color: #e0245e; }
+.card .wish-btn.on { color: #e0245e; }
+.card .wish-btn.on svg path { fill: currentColor; }
+
+/* Item-page wishlist toggle. */
+.btn.wish-toggle { display: inline-flex; align-items: center; gap: 8px; }
+.btn.wish-toggle svg { display: block; }
+.btn.wish-toggle.on svg path { fill: currentColor; }
 
 /* Hover-only quick action overlay on home-page item cards. */
 .card .quick-actions {

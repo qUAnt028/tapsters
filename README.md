@@ -24,6 +24,9 @@ security. Modern purple-and-white design.
   with the **Recently viewed** section pinned underneath the listings.
 - **Recently viewed items** — tracked in `localStorage`, surfaced on the home
   page.
+- **Wishlist** — logged-in users can save items via the heart button on home
+  page cards or the item page; saved items live in the cabinet's
+  **Список бажань** tab.
 - **Drop-down cart** — clicking the cart button in the header opens an
   in-place cart panel with quantity controls and a checkout shortcut.
 - **Currency selector** — switch the display currency on the listing page;

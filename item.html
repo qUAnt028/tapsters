@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tapsters</title>
   <script>(function(){try{var t=localStorage.getItem("tap.theme");if(!t&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
-  <link rel="stylesheet" href="css/styles.css?v=20260601c" />
+  <link rel="stylesheet" href="css/styles.css?v=20260611a" />
 </head>
 <body>
   <div id="site-header"></div>
@@ -15,7 +15,7 @@
 
     <article id="item-root" class="hidden">
       <div class="item-detail">
-        <div class="item-image" id="item-image">📦</div>
+        <div class="item-image" id="item-image"><svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div>
         <div class="item-info">
           <div class="muted" id="item-category"></div>
           <h1 id="item-title"></h1>
@@ -41,6 +41,10 @@
           <div class="row mt-24" style="gap:10px; flex-wrap:wrap">
             <button class="btn" id="add-cart-btn">Додати у кошик</button>
             <button class="btn secondary" id="buy-now-btn">Замовити зараз</button>
+            <button class="btn secondary wish-toggle" id="wish-btn" type="button">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span id="wish-btn-label">В список бажань</span>
+            </button>
             <button class="btn secondary" id="chat-seller-btn">Написати продавцю</button>
             <button class="btn danger hidden" id="delete-btn">Видалити</button>
             <button class="btn danger hidden" id="admin-delete-btn">Видалити (адмін)</button>
@@ -58,15 +62,16 @@
   <footer class="site-footer"><div class="container">© Tapsters Original</div></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/theme.js?v=20260601c"></script>
-  <script src="js/config.js?v=20260601c"></script>
-  <script src="js/supabase.js?v=20260601c"></script>
-  <script src="js/currency.js?v=20260601c"></script>
-  <script src="js/recently.js?v=20260601c"></script>
-  <script src="js/cart.js?v=20260601c"></script>
-  <script src="js/header.js?v=20260601c"></script>
-  <script src="js/notifications.js?v=20260601c"></script>
-  <script src="js/admin.js?v=20260601c"></script>
-  <script src="js/item.js?v=20260601c"></script>
+  <script src="js/theme.js?v=20260611a"></script>
+  <script src="js/config.js?v=20260611a"></script>
+  <script src="js/supabase.js?v=20260611a"></script>
+  <script src="js/currency.js?v=20260611a"></script>
+  <script src="js/recently.js?v=20260611a"></script>
+  <script src="js/cart.js?v=20260611a"></script>
+  <script src="js/wishlist.js?v=20260611a"></script>
+  <script src="js/header.js?v=20260611a"></script>
+  <script src="js/notifications.js?v=20260611a"></script>
+  <script src="js/admin.js?v=20260611a"></script>
+  <script src="js/item.js?v=20260611a"></script>
 </body>
 </html>
