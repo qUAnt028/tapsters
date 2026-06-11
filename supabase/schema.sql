@@ -51,7 +51,8 @@ begin
     raise exception 'target_user is required';
   end if;
 
-  delete from public.cart_items   where user_id = target_user;
+  delete from public.cart_items     where user_id = target_user;
+  delete from public.wishlist_items where user_id = target_user;
   delete from public.order_items  where order_id in (
     select id from public.orders where user_id = target_user
   );
@@ -150,6 +151,17 @@ create table if not exists public.cart_items (
   unique (user_id, item_id)
 );
 
+-- ----- wishlist -----
+create table if not exists public.wishlist_items (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  item_id    uuid not null references public.items(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (user_id, item_id)
+);
+
+create index if not exists wishlist_user_idx on public.wishlist_items(user_id);
+
 -- ----- chats (one thread per buyer<->seller<->item triple) -----
 create table if not exists public.chats (
   id              uuid primary key default gen_random_uuid(),
@@ -213,6 +225,7 @@ alter table public.reviews     enable row level security;
 alter table public.orders      enable row level security;
 alter table public.order_items enable row level security;
 alter table public.cart_items  enable row level security;
+alter table public.wishlist_items enable row level security;
 alter table public.chats       enable row level security;
 alter table public.messages    enable row level security;
 
@@ -292,6 +305,14 @@ create policy "cart read self"   on public.cart_items for select using (auth.uid
 create policy "cart insert self" on public.cart_items for insert with check (auth.uid() = user_id);
 create policy "cart update self" on public.cart_items for update using (auth.uid() = user_id);
 create policy "cart delete self" on public.cart_items for delete using (auth.uid() = user_id);
+
+-- wishlist
+drop policy if exists "wishlist read self"   on public.wishlist_items;
+drop policy if exists "wishlist insert self" on public.wishlist_items;
+drop policy if exists "wishlist delete self" on public.wishlist_items;
+create policy "wishlist read self"   on public.wishlist_items for select using (auth.uid() = user_id);
+create policy "wishlist insert self" on public.wishlist_items for insert with check (auth.uid() = user_id);
+create policy "wishlist delete self" on public.wishlist_items for delete using (auth.uid() = user_id);
 
 -- chats (only the two participants can see / change the thread)
 drop policy if exists "chats read participant"         on public.chats;

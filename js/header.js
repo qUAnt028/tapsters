@@ -259,6 +259,7 @@
               <ul>
                 <li data-act="cabinet">Мій кабінет</li>
                 <li data-act="orders">Мої замовлення</li>
+                <li data-act="wishlist">Список бажань</li>
                 <li data-act="listings">Мої оголошення</li>
                 <li data-act="logout">Вийти</li>
               </ul>
@@ -278,6 +279,7 @@
           const act = li.getAttribute("data-act");
           if (act === "cabinet") location.assign("cabinet.html");
           else if (act === "orders") location.assign("cabinet.html#orders");
+          else if (act === "wishlist") location.assign("cabinet.html#wishlist");
           else if (act === "listings") location.assign("cabinet.html#listings");
           else if (act === "logout") logout();
         });
@@ -317,7 +319,9 @@
 
           <form class="search-wrap" id="search-form" role="search">
             <input id="search-input" type="search" placeholder="Пошук в Tapsters" aria-label="Пошук" />
-            <button type="submit" aria-label="Пошук">🔍</button>
+            <button type="submit" aria-label="Пошук">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            </button>
           </form>
 
           <div class="header-actions">

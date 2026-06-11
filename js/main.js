@@ -9,8 +9,10 @@
   }
 
   function placeholderThumb() {
-    return '<div style="font-size:42px">📦</div>';
+    return '<svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>';
   }
+
+  const HEART_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
 
   function cardHtml(item) {
     const priceStr = window.tapCurrency.formatItem(item.price, item.currency);
@@ -19,6 +21,7 @@
       <a class="card" href="item.html?id=${id}" data-card-id="${escapeHtml(item.id)}">
         <div class="thumb">
           ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="">` : placeholderThumb()}
+          <button type="button" class="wish-btn" data-quick="wish" data-id="${escapeHtml(item.id)}" aria-label="Додати в список бажань" title="Додати в список бажань">${HEART_SVG}</button>
           <div class="quick-actions">
             <button type="button" class="btn secondary" data-quick="cart" data-id="${escapeHtml(item.id)}">Додати у кошик</button>
             <button type="button" class="btn" data-quick="buy" data-id="${escapeHtml(item.id)}">Замовити</button>
@@ -69,6 +72,29 @@
     }
   }
 
+  async function quickToggleWish(itemId, btn) {
+    const t = window.tapsters;
+    const u = t && t.isConfigured ? await t.getUser() : null;
+    if (!u) {
+      location.href = `auth.html?next=${encodeURIComponent("item.html?id=" + itemId)}`;
+      return;
+    }
+    const item = itemsCache.get(itemId) || recentCache.find((r) => r.id === itemId);
+    if (item && item.seller_id && item.seller_id === u.id) {
+      alert("Ви не можете додати власне оголошення до списку бажань.");
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const on = await window.tapWishlist.toggle(itemId);
+      document.querySelectorAll(`.wish-btn[data-id="${CSS.escape(itemId)}"]`)
+        .forEach((b) => b.classList.toggle("on", on));
+    } catch (e) {
+      alert(e.message || "Не вдалося оновити список бажань.");
+    }
+    btn.disabled = false;
+  }
+
   async function quickBuyNow(itemId) {
     const item = itemsCache.get(itemId) || recentCache.find((r) => r.id === itemId);
     if (!item) return;
@@ -99,6 +125,7 @@
       if (!id) return;
       if (action === "cart") quickAddToCart(id);
       else if (action === "buy") quickBuyNow(id);
+      else if (action === "wish") quickToggleWish(id, btn);
     });
   }
 
@@ -148,6 +175,15 @@
     }
 
     grid.innerHTML = items.map(cardHtml).join("");
+    markWishlistButtons();
+  }
+
+  async function markWishlistButtons() {
+    if (!window.tapWishlist) return;
+    const ids = await window.tapWishlist.ids();
+    document.querySelectorAll(".wish-btn[data-id]").forEach((b) => {
+      b.classList.toggle("on", ids.has(b.getAttribute("data-id")));
+    });
   }
 
   function paintRecentlyViewed() {
@@ -165,6 +201,7 @@
     }
     empty.classList.add("hidden");
     grid.innerHTML = items.map(cardHtml).join("");
+    markWishlistButtons();
     if (clearBtn) clearBtn.classList.remove("hidden");
   }
 

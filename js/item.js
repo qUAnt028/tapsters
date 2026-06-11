@@ -137,6 +137,7 @@
       delBtn.classList.remove("hidden");
       $("#add-cart-btn").classList.add("hidden");
       $("#buy-now-btn").classList.add("hidden");
+      $("#wish-btn").classList.add("hidden");
       $("#chat-seller-btn").classList.add("hidden");
 
       delBtn.addEventListener("click", async () => {
@@ -217,6 +218,32 @@
           chatBtn.textContent = prevLabel;
           chatBtn.disabled = false;
         }
+      });
+    }
+
+    // Wishlist toggle
+    const wishBtn = $("#wish-btn");
+    const wishLabel = $("#wish-btn-label");
+    function paintWish(on) {
+      wishBtn.classList.toggle("on", on);
+      wishLabel.textContent = on ? "У списку бажань" : "В список бажань";
+    }
+    if (!isSeller && wishBtn) {
+      if (me) paintWish(await window.tapWishlist.has(item.id));
+      wishBtn.addEventListener("click", async () => {
+        if (!me) {
+          location.href = `auth.html?next=${encodeURIComponent("item.html?id=" + id)}`;
+          return;
+        }
+        wishBtn.disabled = true;
+        try {
+          paintWish(await window.tapWishlist.toggle(item.id));
+        } catch (e) {
+          const err = $("#add-error");
+          err.textContent = e.message || "Не вдалося оновити список бажань.";
+          err.classList.remove("hidden");
+        }
+        wishBtn.disabled = false;
       });
     }
 
