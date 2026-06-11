@@ -696,6 +696,35 @@ section.section h2 {
   color: var(--purple-300);
 }
 .item-image img { width: 100%; height: 100%; object-fit: cover; }
+.item-info { display: flex; flex-direction: column; }
+.item-kicker {
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--purple-500);
+  margin-bottom: 6px;
+}
+.item-title { margin: 0 0 10px; font-size: 1.9rem; line-height: 1.2; color: var(--surface-text); }
+.item-price-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.item-price-row .price { font-size: 1.7rem; }
+.item-info .desc { color: var(--surface-text); line-height: 1.55; white-space: pre-line; margin: 2px 0 0; }
+
+/* Even 2-column grid of equal-width action buttons. */
+.item-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 22px;
+}
+.item-actions .btn {
+  width: 100%;
+  padding: 12px 10px;
+  font-size: .95rem;
+  white-space: nowrap;
+}
+.item-actions .btn.danger { grid-column: 1 / -1; }
+@media (max-width: 460px) { .item-actions { grid-template-columns: 1fr; } }
 .gallery-thumbs {
   display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
 }
@@ -788,10 +817,6 @@ section.section h2 {
   cursor: nwse-resize;
 }
 .crop-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-.item-info h1 { margin: 0 0 8px; color: var(--surface-text-strong); }
-.item-info .price { font-size: 1.7rem; }
-.item-info .desc { color: var(--surface-text); margin: 14px 0; white-space: pre-wrap; }
-
 .stars { display: inline-flex; gap: 2px; }
 .stars .star {
   font-size: 1.2rem;
@@ -817,13 +842,42 @@ section.section h2 {
 .seller-card {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   background: var(--surface-2);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-  margin-top: 18px;
+  margin-top: 20px;
 }
+.seller-card .seller-info {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.seller-kicker {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--surface-text-muted);
+}
+.seller-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--purple-800);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.seller-rating { display: flex; align-items: center; gap: 8px; font-size: .85rem; }
+.seller-card .btn {
+  padding: 9px 18px;
+  font-size: .9rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+@media (max-width: 520px) { .seller-card .btn { width: 100%; } }
 .seller-avatar {
   width: 48px; height: 48px;
   border-radius: 50%;
