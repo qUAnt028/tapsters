@@ -1573,3 +1573,70 @@ select.select:focus {
 [data-theme="dark"] select.select:focus {
   box-shadow: 0 0 0 3px rgba(168, 124, 240, .25);
 }
+
+/* ---------- Checkout layout ---------- */
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+@media (max-width: 860px) {
+  .checkout-grid { grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+}
+
+/* ---------- Mobile optimization ---------- */
+@media (max-width: 720px) {
+  .container { padding: 0 14px; }
+
+  .hero { margin-top: 16px; padding: 22px 18px; }
+  .hero h1 { font-size: 1.45rem; }
+  .hero p { font-size: .92rem; }
+  section.section h2 { font-size: 1.2rem; }
+
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .card .body { padding: 10px; }
+  .card .title { font-size: .9rem; min-height: 2.4em; }
+  .price { font-size: 1rem; }
+  .card .quick-actions { padding: 8px; gap: 6px; }
+  .card .quick-actions .btn { padding: 5px 10px; font-size: .78rem; }
+
+  /* Dropdown panels span the viewport instead of hanging off-screen. */
+  .menu-panel,
+  .cart-panel {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    top: calc(var(--header-h) + 8px);
+    width: auto;
+    min-width: 0;
+  }
+  .cart-panel { max-height: calc(100dvh - var(--header-h) - 24px); }
+
+  .item-detail { padding: 16px; gap: 18px; }
+  .item-title { font-size: 1.45rem; }
+  .item-price-row .price { font-size: 1.4rem; }
+  .item-actions { gap: 8px; }
+
+  .form-card { padding: 20px 16px; margin: 20px auto; }
+
+  .tabs { flex-wrap: wrap; }
+  .tabs .tab { padding: 7px 12px; font-size: .9rem; }
+
+  .seller-hero { padding: 16px; flex-wrap: wrap; gap: 14px; }
+  .order-row header { flex-wrap: wrap; }
+
+  .crop-dialog { padding: 14px; }
+  .crop-aspects { flex-wrap: wrap; }
+  .crop-actions .btn { flex: 1; }
+
+  .chat-view { margin: 14px 0; min-height: 320px; }
+  .chat-view .chat-head { padding: 10px 12px; gap: 10px; }
+  .chat-view .chat-composer { padding: 10px; }
+
+  .icon-btn { padding: 0 10px; }
+}
+
+@media (max-width: 380px) {
+  .grid { grid-template-columns: 1fr; }
+}
