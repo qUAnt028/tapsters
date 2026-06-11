@@ -88,14 +88,39 @@ create table if not exists public.items (
   price       numeric(12,2) not null check (price >= 0),
   currency    text not null default 'USD' check (currency in ('USD','EUR','GBP','UAH')),
   image_url   text,
+  images      text[],
   stock       int not null default 1 check (stock >= 0),
   sold        boolean not null default false,
   created_at  timestamptz not null default now()
 );
 
+-- For projects created from an older schema version.
+alter table public.items add column if not exists images text[];
+
 create index if not exists items_category_idx on public.items(category_id);
 create index if not exists items_seller_idx   on public.items(seller_id);
 create index if not exists items_title_trgm   on public.items using gin (to_tsvector('simple', title));
+
+-- ----- storage bucket for item photos (uploaded from the device) -----
+insert into storage.buckets (id, name, public)
+values ('item-images', 'item-images', true)
+on conflict (id) do nothing;
+
+drop policy if exists "item images read"       on storage.objects;
+drop policy if exists "item images insert own" on storage.objects;
+drop policy if exists "item images delete own" on storage.objects;
+create policy "item images read" on storage.objects
+  for select using (bucket_id = 'item-images');
+create policy "item images insert own" on storage.objects
+  for insert with check (
+    bucket_id = 'item-images'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+create policy "item images delete own" on storage.objects
+  for delete using (
+    bucket_id = 'item-images'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
 
 -- ----- reviews about sellers (5-star ratings + comments) -----
 -- Note: an earlier version of this schema had a `comments` table tied to
