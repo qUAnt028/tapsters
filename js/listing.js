@@ -1,26 +1,6 @@
 (function () {
   const $ = (s) => document.querySelector(s);
 
-  // Returns a cleaned URL string, "" for empty input, or false if it isn't a URL.
-  // Also tolerates pasted links without a scheme by prepending "https://".
-  function normalizeImageUrl(raw) {
-    let v = (raw || "").trim();
-    if (!v) return "";
-    // strip wrapping quotes / angle brackets that some users paste
-    v = v.replace(/^[<"'\s]+|[>"'\s]+$/g, "");
-    if (!v) return "";
-    if (!/^https?:\/\//i.test(v) && !/^data:image\//i.test(v)) {
-      v = "https://" + v.replace(/^\/+/, "");
-    }
-    try {
-      const u = new URL(v);
-      if (u.protocol !== "http:" && u.protocol !== "https:" && u.protocol !== "data:") return false;
-      return u.toString();
-    } catch (_) {
-      return false;
-    }
-  }
-
   function showError(msg) {
     const e = $("#form-error");
     if (e) {
@@ -77,6 +57,52 @@
 
     await loadCategories();
 
+    // ----- photo picking + cropping -----
+    const MAX_PHOTOS = 8;
+    const photos = []; // { blob, previewUrl }
+    const thumbsEl = $("#photo-thumbs");
+    const photoInput = $("#photo-input");
+    const addPhotoBtn = $("#add-photo-btn");
+
+    function paintThumbs() {
+      thumbsEl.innerHTML = photos.map((p, i) => `
+        <div class="photo-thumb">
+          <img src="${p.previewUrl}" alt="" />
+          ${i === 0 ? '<span class="photo-main-badge">Головне</span>' : ""}
+          <button type="button" data-remove="${i}" aria-label="Видалити фото">×</button>
+        </div>
+      `).join("");
+      addPhotoBtn.disabled = photos.length >= MAX_PHOTOS;
+    }
+
+    thumbsEl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("[data-remove]");
+      if (!btn) return;
+      const i = parseInt(btn.getAttribute("data-remove"), 10);
+      URL.revokeObjectURL(photos[i].previewUrl);
+      photos.splice(i, 1);
+      paintThumbs();
+    });
+
+    addPhotoBtn.addEventListener("click", () => photoInput.click());
+
+    photoInput.addEventListener("change", async () => {
+      const files = Array.from(photoInput.files || []);
+      photoInput.value = "";
+      for (const file of files) {
+        if (photos.length >= MAX_PHOTOS) {
+          showError(`Можна додати не більше ${MAX_PHOTOS} фото.`);
+          break;
+        }
+        if (!/^image\//.test(file.type)) continue;
+        const blob = await window.tapPhotos.cropImage(file);
+        if (blob) {
+          photos.push({ blob, previewUrl: URL.createObjectURL(blob) });
+          paintThumbs();
+        }
+      }
+    });
+
     form.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       clearMessages();
@@ -84,10 +110,8 @@
       const title = $("#title").value.trim();
       const description = $("#description").value.trim();
       const category_id = $("#category").value || null;
-      const stock = parseInt($("#stock").value || "1", 10);
       const price = parseFloat($("#price").value);
       const currencyEl = document.querySelector('input[name="currency"]:checked');
-      const image_url = normalizeImageUrl($("#image_url").value);
 
       if (!title || isNaN(price) || price < 0) {
         showError("Будь ласка, вкажіть назву та коректну ціну.");
@@ -97,15 +121,18 @@
         showError("Будь ласка, оберіть категорію.");
         return;
       }
-      if (image_url === false) {
-        showError("Це посилання на фото виглядає неправильно. Вставте пряме посилання наприклад https://example.com/photo.jpg.");
-        return;
-      }
 
       const submit = $("#submit-btn");
       submit.disabled = true;
+      const prevLabel = submit.textContent;
 
       try {
+        let imageUrls = [];
+        if (photos.length) {
+          submit.textContent = "Завантажуємо фото…";
+          imageUrls = await window.tapPhotos.uploadItemImages(user.id, photos.map((p) => p.blob));
+        }
+
         // Build payload dynamically to avoid sending empty strings or nulls that might violate DB constraints
         const payload = {
           seller_id: user.id,
@@ -114,11 +141,11 @@
           description,
           price,
           currency: currencyEl ? currencyEl.value : "USD",
-          stock,
         };
 
-        if (image_url) {
-          payload.image_url = image_url;
+        if (imageUrls.length) {
+          payload.image_url = imageUrls[0];
+          payload.images = imageUrls;
         }
 
         const { data, error } = await t.client
@@ -135,6 +162,7 @@
         showError(err.message || "Не вдалося опублікувати оголошення.");
       } finally {
         submit.disabled = false;
+        submit.textContent = prevLabel;
       }
     });
   });

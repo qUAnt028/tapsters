@@ -14,7 +14,7 @@
     const { data } = await t.client
       .from("items")
       .select(`
-        id, title, description, price, currency, image_url, sold, stock, seller_id, created_at,
+        id, title, description, price, currency, image_url, images, sold, stock, seller_id, created_at,
         categories:categories ( name, slug )
       `)
       .eq("id", id)
@@ -90,8 +90,24 @@
     $("#item-price").textContent = window.tapCurrency.formatItem(item.price, item.currency);
     document.title = `${item.title} — Tapsters`;
 
-    if (item.image_url) {
-      $("#item-image").innerHTML = `<img src="${escapeHtml(item.image_url)}" alt="">`;
+    const gallery = (item.images && item.images.length ? item.images : []).filter(Boolean);
+    if (!gallery.length && item.image_url) gallery.push(item.image_url);
+    if (gallery.length) {
+      $("#item-image").innerHTML = `<img id="item-image-main" src="${escapeHtml(gallery[0])}" alt="">`;
+      if (gallery.length > 1) {
+        const strip = document.createElement("div");
+        strip.className = "gallery-thumbs";
+        strip.innerHTML = gallery.map((u, i) =>
+          `<button type="button" class="gallery-thumb${i === 0 ? " active" : ""}" data-src="${escapeHtml(u)}"><img src="${escapeHtml(u)}" alt=""></button>`
+        ).join("");
+        $("#item-image").after(strip);
+        strip.addEventListener("click", (ev) => {
+          const b = ev.target.closest(".gallery-thumb");
+          if (!b) return;
+          $("#item-image-main").src = b.getAttribute("data-src");
+          strip.querySelectorAll(".gallery-thumb").forEach((x) => x.classList.toggle("active", x === b));
+        });
+      }
     }
 
     // Seller card
